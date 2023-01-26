@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>F-panel remote</title>
+
+<link rel="stylesheet" href="style.css">
+<script src="/main.js" type="text/javascript"></script>
+
+</head>
+
+<body>
+
+<div id="main_frame" >
+
+    <div id="status_block">
+        <div id="status_line" class="outlined">
+            <div id="status_dot" class="status_unknown"></div>
+            <div id="status_text">Status unknown</div>
+        </div>
+    </div>    
+
+    <div id="console_block">
+        <div id="console">
+
+            <div id="console_log" class="outlined"></div>
+                
+            <div id="console_input_line" class="outlined">
+                <div id="console_prompt">>>> </div>
+                <div id="console_input" contenteditable="true"></div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+<script type="text/javascript">
+    (function() { 
+        init();
+    })();
+</script>
+</body>
+
+</html>

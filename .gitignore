@@ -1,0 +1,9 @@
+
+build/*
+*.sublime-*
+*.pyd
+*gerbers/*
+hardware/*/gerbers
+hardware/*/*-cache
+hardware/*/*-backups
+*.kicad*-bak
