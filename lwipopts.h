@@ -4,7 +4,7 @@
 #define MEM_LIBC_MALLOC             0
 
 #define MEM_ALIGNMENT               4
-#define MEM_SIZE                    4000
+#define MEM_SIZE                    12000
 #define MEMP_NUM_TCP_SEG            32
 #define MEMP_NUM_ARP_QUEUE          10
 #define PBUF_POOL_SIZE              24
@@ -52,7 +52,7 @@
 #define API_LIB_DEBUG               LWIP_DBG_OFF
 #define API_MSG_DEBUG               LWIP_DBG_OFF
 #define SOCKETS_DEBUG               LWIP_DBG_OFF
-#define ICMP_DEBUG                  LWIP_DBG_ON
+#define ICMP_DEBUG                  LWIP_DBG_OFF
 #define INET_DEBUG                  LWIP_DBG_OFF
 #define IP_DEBUG                    LWIP_DBG_OFF
 #define IP_REASS_DEBUG              LWIP_DBG_OFF
@@ -76,8 +76,8 @@
 #define DHCP_DEBUG                  LWIP_DBG_OFF
 
 #if !NO_SYS
-#define TCPIP_THREAD_STACKSIZE 1024
-#define DEFAULT_THREAD_STACKSIZE 1024
+#define TCPIP_THREAD_STACKSIZE 1024 * 4
+#define DEFAULT_THREAD_STACKSIZE 1024 * 4
 #define DEFAULT_RAW_RECVMBOX_SIZE 8
 #define TCPIP_MBOX_SIZE 8
 #define LWIP_TIMEVAL_PRIVATE 0

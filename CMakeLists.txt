@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.12)
 
+# pioc-sdc: branch develop; sha: 36ba9e64bcd5bb159c395dd706f3905adfbef57b
+# FreeRTOS-Kernel: branch smp; sha: 0f9e6e5b521009f585018b47f7e8aa573f010206
+
+
 include(pico_sdk_import.cmake)
 include(FreeRTOS_Kernel_import.cmake)
 
@@ -18,6 +22,7 @@ add_executable(fpanel_remote
         fsdata.c
         http_server.c
         websocket.c
+        dhcp_server.c
         )
 
 target_compile_definitions(fpanel_remote PRIVATE
@@ -37,6 +42,7 @@ target_link_libraries(fpanel_remote
         pico_stdlib
         pico_lwip_iperf
         pico_lwip_ppp
+        pico_rand
         FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
         )
 pico_add_extra_outputs(fpanel_remote)

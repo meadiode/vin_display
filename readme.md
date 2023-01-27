@@ -56,6 +56,7 @@ gdb-multiarch ./fpanel_remote.elf
 Once GDB started:
 ```
 target remote :3333
+load
 monitor init reset
 cont
 ```

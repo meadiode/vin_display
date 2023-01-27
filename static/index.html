@@ -12,24 +12,60 @@
 
 <div id="main_frame" >
 
-    <div id="status_block">
-        <div id="status_line" class="outlined">
-            <div id="status_dot" class="status_unknown"></div>
-            <div id="status_text">Status unknown</div>
-        </div>
-    </div>    
+    <div class="tab">
+        <button class="tablinks" onclick="switch_tab(event, 'f_panel_tab')">F-Panel</button>
+        <button class="tablinks" onclick="switch_tab(event, 'settings_tab')">Settings</button>
+        <button class="tablinks" onclick="switch_tab(event, 'console_tab')">Console</button>
+    </div>
 
-    <div id="console_block">
-        <div id="console">
 
-            <div id="console_log" class="outlined"></div>
-                
-            <div id="console_input_line" class="outlined">
-                <div id="console_prompt">>>> </div>
-                <div id="console_input" contenteditable="true"></div>
+    <div id="f_panel_tab" class="tabcontent"> 
+    
+    </div>
+
+    <div id="settings_tab" class="tabcontent"> 
+        
+        <form action="">
+            <label for="pc_name">Computer name</label>
+            <input type="text" id="pc_name" name="pc_name" placeholder="My PC">
+
+            <label for="ssid">Connect to Wi-Fi</label>
+            <input type="text" id="ssid" name="ssid" placeholder="Wi-Fi name (SSID)">
+
+            <label for="auth_method">Authorization type</label>
+            <select id="auth_method" name="auth_method">
+                <option value="open">Open</option>
+                <option value="wpa">WPA</option>
+                <option value="wpa2">WPA2</option>
+                <option value="mixed">WPA2/WPA</option>
+            </select>
+
+            <input type="submit" value="Save">
+        </form>    
+    </div>
+
+    <div id="console_tab" class="tabcontent"> 
+        <div id="status_block">
+            <div id="status_line" class="outlined">
+                <div id="status_dot" class="status_unknown"></div>
+                <div id="status_text">Status unknown</div>
             </div>
+        </div>    
+
+        <div id="console_block">
+            <div id="console">
+
+                <div id="console_log" class="outlined"></div>
+                    
+                <div id="console_input_line" class="outlined">
+                    <div id="console_prompt">>>> </div>
+                    <div id="console_input" contenteditable="true"></div>
+                </div>
+            </div>
+
         </div>
     </div>
+
 
 
 </div>
