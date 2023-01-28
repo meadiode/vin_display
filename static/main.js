@@ -13,6 +13,8 @@ var con_history_tmp = '';
 
 var con_log_scrolled = false;
 
+var socket = null;
+
 
 function con_log_update(entry) {
 
@@ -147,6 +149,8 @@ function init() {
         
         con_log_scrolled = !(conlog.scrollTop >= scroll_end);
     });
+
+    socket = new WebSocket('ws://' + window.location.host + '/ws');
 
     console.log('init done');
 }
