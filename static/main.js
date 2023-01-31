@@ -152,6 +152,8 @@ function init() {
 
     socket = new WebSocket('ws://' + window.location.host + '/ws');
 
+    document.getElementById('default_tab').click();
+
     console.log('init done');
 }
 

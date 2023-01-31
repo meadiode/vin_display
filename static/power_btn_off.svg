@@ -26,8 +26,8 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="1.4930696"
-     inkscape:cx="23.106759"
-     inkscape:cy="108.83619"
+     inkscape:cx="-22.102118"
+     inkscape:cy="120.22212"
      inkscape:window-width="2560"
      inkscape:window-height="1055"
      inkscape:window-x="1920"
@@ -40,11 +40,11 @@
        inkscape:collect="always"
        id="linearGradient958">
       <stop
-         style="stop-color:#000000;stop-opacity:0.7905913;"
+         style="stop-color:#373737;stop-opacity:1;"
          offset="0"
          id="stop954" />
       <stop
-         style="stop-color:#000000;stop-opacity:0;"
+         style="stop-color:#dedede;stop-opacity:1;"
          offset="1"
          id="stop956" />
     </linearGradient>
@@ -57,7 +57,28 @@
        x2="66.3396"
        y2="1.8570591"
        gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient958"
+       id="linearGradient1013"
+       gradientUnits="userSpaceOnUse"
+       x1="16.147324"
+       y1="57.143547"
+       x2="54.593014"
+       y2="13.846444" />
   </defs>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Layer 2"
+     style="fill-opacity:1;fill:url(#linearGradient960)">
+    <circle
+       style="fill:url(#linearGradient1013);fill-opacity:1;stroke:#000000;stroke-width:0.26458333;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1;stroke-linejoin:round"
+       id="path2539"
+       cx="33.054863"
+       cy="34.975327"
+       r="31.481342" />
+  </g>
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
@@ -94,17 +115,5 @@
            r="26" />
       </g>
     </g>
-  </g>
-  <g
-     inkscape:groupmode="layer"
-     id="layer2"
-     inkscape:label="Layer 2"
-     style="fill-opacity:1;fill:url(#linearGradient960)">
-    <circle
-       style="fill:url(#linearGradient960);fill-opacity:1;stroke:#000000;stroke-width:0.26458333;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1;stroke-linejoin:round"
-       id="path2539"
-       cx="33.054863"
-       cy="34.975327"
-       r="31.481342" />
   </g>
 </svg>

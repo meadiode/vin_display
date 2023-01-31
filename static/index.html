@@ -13,19 +13,36 @@
 <div id="main_frame" >
 
     <div class="tab">
-        <button class="tablinks" onclick="switch_tab(event, 'f_panel_tab')">F-Panel</button>
+        <button class="tablinks" id="default_tab" onclick="switch_tab(event, 'f_panel_tab')">F-Panel</button>
         <button class="tablinks" onclick="switch_tab(event, 'settings_tab')">Settings</button>
         <button class="tablinks" onclick="switch_tab(event, 'console_tab')">Console</button>
     </div>
 
 
     <div id="f_panel_tab" class="tabcontent"> 
-    
+        <div class="f_panel_button" id="btn_power">
+        </div>
+
+        <div class="f_panel_button" id="btn_reset">
+        </div>
+
+        <div id="leds">
+            <div class="tagged_led">
+                <div class="led_tag">PWR</div>
+                <div class="led" id="led_power"></div>                
+            </div>
+
+            <div class="tagged_led">
+                <div class="led_tag">HDD</div>
+                <div class="led" id="led_hdd"></div>
+            </div>
+
+        </div>
     </div>
 
     <div id="settings_tab" class="tabcontent"> 
         
-        <form action="">
+        <div action="">
             <label for="pc_name">Computer name</label>
             <input type="text" id="pc_name" name="pc_name" placeholder="My PC">
 
@@ -41,7 +58,7 @@
             </select>
 
             <input type="submit" value="Save">
-        </form>    
+        </div>    
     </div>
 
     <div id="console_tab" class="tabcontent"> 

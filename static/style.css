@@ -176,3 +176,61 @@ input[type=text], select {
     text-align: center;
     display: none;
 }
+
+
+#f_panel_tab {
+    background-color: #ccc;
+    display: flex;
+    height: 140px;
+}
+
+#btn_power {
+    width: 120px;
+    height: 120px;
+    background-image: url("/power_btn_off.svg");
+    background-size: 100% 100%;
+    float: left;
+    margin-top: 10px;
+}
+
+#btn_reset {
+    width: 60px;
+    height: 60px;
+    background-image: url("/reset_btn.svg");
+    background-size: 100% 100%;
+    float: left;
+    margin-top: 40px;
+    margin-left: 20px;
+}
+
+#leds {
+    display: block;
+    float: left;
+    margin-top: 35px;
+    margin-left: 40px;
+}
+
+.led {
+    width: 20px;
+    height: 20px;
+    background-image: url("/led.svg");
+    background-size: 100% 100%;
+    margin-left: 10px;
+    float: left;
+}
+
+.led_tag {
+    float: left;
+    font-size: 16px;
+    margin-top: 2px;
+    cursor: default;
+}
+
+.tagged_led {
+    clear: both;
+    padding-top: 10px;
+}
+
+.f_panel_button:hover {
+    filter: drop-shadow(0px 0px 3px #000)
+}

@@ -26,25 +26,25 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="2.1115193"
-     inkscape:cx="129.52759"
-     inkscape:cy="127.15963"
+     inkscape:cx="27.231577"
+     inkscape:cy="127.63322"
      inkscape:window-width="2560"
      inkscape:window-height="1055"
      inkscape:window-x="1920"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer1" />
+     inkscape:current-layer="layer2" />
   <defs
      id="defs2">
     <linearGradient
        inkscape:collect="always"
        id="linearGradient958">
       <stop
-         style="stop-color:#000000;stop-opacity:0.7905913;"
+         style="stop-color:#383838;stop-opacity:1;"
          offset="0"
          id="stop954" />
       <stop
-         style="stop-color:#000000;stop-opacity:0;"
+         style="stop-color:#dedede;stop-opacity:1;"
          offset="1"
          id="stop956" />
     </linearGradient>
@@ -52,20 +52,16 @@
        inkscape:collect="always"
        xlink:href="#linearGradient958"
        id="linearGradient960"
-       x1="0.55441207"
-       y1="67.637802"
-       x2="66.3396"
-       y2="1.8570591"
+       x1="11.290114"
+       y1="58.112125"
+       x2="55.738747"
+       y2="13.09564"
        gradientUnits="userSpaceOnUse" />
   </defs>
   <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
-     id="layer1" />
-  <g
      inkscape:groupmode="layer"
      id="layer2"
-     inkscape:label="Layer 2"
+     inkscape:label="Layer 1"
      style="fill-opacity:1;fill:url(#linearGradient960)">
     <circle
        style="fill:url(#linearGradient960);fill-opacity:1;stroke:#000000;stroke-width:0.26458333;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1;stroke-linejoin:round"
