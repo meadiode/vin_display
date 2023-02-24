@@ -4,7 +4,7 @@
     max-width: 800px;
     min-width: 200px;
 
-    font-family: monospace;
+    font-family: 'Courier New', monospace;
     
     background: white;
     display: block;
@@ -17,102 +17,6 @@
     border-color: darkgray;
     border-radius: 10px;
     padding: 4px;
-}
-
-
-#console {
-    display: block;
-}
-
-
-#status_line {
-    white-space: nowrap;
-    width: 100%;
-    display: flex;
-    margin-bottom: 4px;
-}
-
-#status_dot {
-    float: left;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-}
-
-#status_dot.status_unknown {
-    background-color: lightgray;
-}
-
-#status_dot.status_connected {
-    background-color: limegreen;
-}
-
-#status_dot.status_disconnected {
-    background-color: orangered;
-}
-
-#status_dot.status_unstable {
-    background-color: gold;
-}
-
-#status_text {
-    width: 100%;
-    overflow: hidden;
-    white-space: nowrap;
-    outline: 0px solid transparent;
-    margin-left: 8px;
-}
-
-#console_log {
-    width: 100%;
-    height: 60%;
-    min-height: 200px;
-    max-height: 60%;
-    margin-bottom: 4px;
-
-    overflow-y: scroll;
-}
-
-/* Console log window custom scroll-bar */
-/* width */
-#console_log::-webkit-scrollbar {
-  width: 20px;
-}
-
-/* Track */
-#console_log::-webkit-scrollbar-track {
-  border-radius: 10px;
-}
- 
-/* Handle */
-#console_log::-webkit-scrollbar-thumb {
-  background: lightgray; 
-  border-radius: 10px;
-}
-
-/* Handle on hover */
-#console_log::-webkit-scrollbar-thumb:hover {
-  background: darkgray; 
-}
-
-#console_input_line {
-    white-space: nowrap;
-    width: 100%;
-    display: flex;
-}
-
-#console_prompt
-{
-    float: left;
-    user-select: none;
-}
-
-#console_input {
-    width: 100%;
-    overflow: hidden;
-    white-space: nowrap;
-    outline: 0px solid transparent;
-    margin-left: 4px;
 }
 
 /* Style the tab */
@@ -168,13 +72,26 @@ input[type=text], select {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 1000000;
-    background-color: lightgray;
-    opacity: 0.5;
+    z-index: 100;
     color: white;
     font-size: 18pt;
     text-align: center;
     display: none;
+}
+
+#offline_overlay_background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: lightgray;
+    opacity: 0.5;
+    z-index: 110;
+}
+
+#offline_overlay_contents {
+    margin-top: 10%;
+    z-index: 120;
+    position: relative;
 }
 
 
@@ -231,6 +148,26 @@ input[type=text], select {
     padding-top: 10px;
 }
 
+
+.f_panel_button {
+    border: none;
+    background: none;
+}
+
 .f_panel_button:hover {
     filter: drop-shadow(0px 0px 3px #000)
+}
+
+.f_panel_button:active {
+    filter: drop-shadow(0px 0px 6px #000)
+}
+
+#pc_info {
+    float: left;
+    margin-top: 30px;
+    margin-left: 100px;
+}
+
+.info_str > pre {
+    font-family: 'Courier New', monospace;
 }

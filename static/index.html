@@ -15,16 +15,15 @@
     <div class="tab">
         <button class="tablinks" id="default_tab" onclick="switch_tab(event, 'f_panel_tab')">F-Panel</button>
         <button class="tablinks" onclick="switch_tab(event, 'settings_tab')">Settings</button>
-        <button class="tablinks" onclick="switch_tab(event, 'console_tab')">Console</button>
     </div>
 
 
     <div id="f_panel_tab" class="tabcontent"> 
-        <div class="f_panel_button" id="btn_power">
-        </div>
+        <button class="f_panel_button" id="btn_power">
+        </button>
 
-        <div class="f_panel_button" id="btn_reset">
-        </div>
+        <button class="f_panel_button" id="btn_reset">
+        </button>
 
         <div id="leds">
             <div class="tagged_led">
@@ -36,7 +35,15 @@
                 <div class="led_tag">HDD</div>
                 <div class="led" id="led_hdd"></div>
             </div>
+        </div>
 
+        <div id="pc_info">
+            <div class="info_str">
+                <pre id="info_uptime">Uptime: 00d 00:00:00</pre>
+            </div>
+            <div class="info_str">
+                <pre id="info_temp">Temperature:   00.0C</pre>
+            </div>
         </div>
     </div>
 
@@ -61,29 +68,8 @@
         </div>    
     </div>
 
-    <div id="console_tab" class="tabcontent"> 
-        <div id="status_block">
-            <div id="status_line" class="outlined">
-                <div id="status_dot" class="status_unknown"></div>
-                <div id="status_text">Status unknown</div>
-            </div>
-        </div>    
-
-        <div id="console_block">
-            <div id="console">
-
-                <div id="console_log" class="outlined"></div>
-                    
-                <div id="console_input_line" class="outlined">
-                    <div id="console_prompt">>>> </div>
-                    <div id="console_input" contenteditable="true"></div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
     <div id="offline_overlay">
+        <div id="offline_overlay_background"></div>
         <div id="offline_overlay_contents">
             <div>Device disconnected ...</div>
             <button id="btn_connect">Connect</button>

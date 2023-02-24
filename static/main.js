@@ -1,160 +1,127 @@
 
 
-var STATUS = {
-    UNKNOWN         : 0,
-    DISCONNECTED    : 1,
-    CONNECTED       : 2,
-    UNSTABLE        : 3
-};
-
-var con_history = [];
-var con_history_pos = 0;
-var con_history_tmp = '';
-
-var con_log_scrolled = false;
-
 var socket = null;
 
 
-function con_log_update(entry) {
-
-    var conlog = document.getElementById('console_log');
-
-    conlog.innerText = conlog.innerText + '\n' + entry;
-    
-    if (!con_log_scrolled) {
-        var scroll_end = conlog.scrollHeight - conlog.clientHeight;
-        conlog.scrollTop = Math.max(0, scroll_end);
-    }
-}
-
-
-function set_status(status) {
-    var dot = document.getElementById('status_dot');
-    var stxt = document.getElementById('status_text');
-
-    switch(status) {
-    
-    case STATUS.DISCONNECTED:
-        dot.className = 'status_disconnected';
-        stxt.innerText = 'Disconnected';
-        break;
-
-    case STATUS.CONNECTED:
-        dot.className = 'status_connected';
-        stxt.innerText = 'Connected';
-        break;
-
-    case STATUS.UNSTABLE:
-        dot.className = 'status_unstable';
-        stxt.innerText = 'Unstable connection';
-        break;
-
-    case STATUS.UNKNOWN:
-    default:
-        dot.className = 'status_unknown';
-        stxt.innerText = 'Status unknown'
-    }
-
-}
-
-function init() {
-
-    var inp = document.getElementById('console_input');
-
-    inp.addEventListener('keypress', function(evt) {
-        
-        /* enter key */
-        if (evt.keyCode == 13) {
-            cmd_req = inp.innerText;
-            inp.innerText = '';
-        
-            if ((cmd_req !== '') && (cmd_req !== con_history.slice(-1)[0])) {
-                con_history.push(cmd_req);
-            }
-            con_history_pos = 0;
-
-            if (cmd_req !== '') {
-                console.log('Sending cmd: ', cmd_req);
-
-                var req = new XMLHttpRequest();
-                req.open('POST', '/cmd', true);
-                req.setRequestHeader('Accept', 'application/json');
-                req.setRequestHeader('Content-Type', 'application/json');
-
-
-                req.onload = function () {
-                    if (req.readyState != 4 || req.status != 200) {
-                        console.log('request failed');
-                        console.log('status: ', req.status);
-                    } else {
-                        con_log_update(req.responseText);
-                        set_status(STATUS.CONNECTED);
-                    }
-                    console.log(req.responseText);
-                }
-
-                var payload = {cmd: cmd_req};
-                req.send(JSON.stringify(payload));                
-            }
-
-            evt.preventDefault();
-        }
-    });
-
-    inp.addEventListener('keydown', function(evt) {
-        /* Cycle through console history */
-        if (con_history.length > 0) {
-            
-            /* up arrow key */
-            if (evt.keyCode == 38) {
-
-                if (con_history_pos == 0) {
-                    con_history_tmp = inp.innerText;
-                }
-
-                con_history_pos -= 1;
-
-            /* down arrow key */
-            } else if (evt.keyCode == 40) {
-                
-                if (con_history_pos == 0) {
-                    con_history_tmp = inp.innerText;
-                    con_history_pos = -con_history.length;
-                } else {
-                    con_history_pos += 1;
-                }
-            };
-
-            if (evt.keyCode == 38 || evt.keyCode == 40)
-            {
-                if (Math.abs(con_history_pos) > con_history.length) {
-                    con_history_pos = 0;
-                }
-
-                if (con_history_pos == 0) {
-                    inp.innerText = con_history_tmp;
-                } else {
-                    inp.innerText = con_history.slice(con_history_pos)[0];
-                }
-            }
-        }
-    });
-
-    
-    var conlog = document.getElementById('console_log');
-
-    conlog.addEventListener('scroll', function(evt) {
-        var scroll_end = conlog.scrollHeight - conlog.clientHeight;
-        
-        con_log_scrolled = !(conlog.scrollTop >= scroll_end);
-    });
+function init() {    
 
     socket = new WebSocket('ws://' + window.location.host + '/ws');
 
-    document.getElementById('default_tab').click();
+    socket.addEventListener('open', function(e) {
+        
+        socket.addEventListener('close', function(e) {
+            overlay = document.getElementById('offline_overlay');
+            overlay.style.display = 'block';
+        });
 
+        socket.addEventListener('message', function(e) {
+            dispatch_message(JSON.parse(e.data));
+        });
+
+    });
+
+    var btn_power = document.getElementById('btn_power');
+    
+    btn_power.addEventListener('mousedown', function(e) {
+        var req = {btn_power_press: true};
+        socket.send(JSON.stringify(req));
+    });
+
+    btn_power.addEventListener('mouseup', function(e) {
+        var req = {btn_power_press: false};
+        socket.send(JSON.stringify(req));
+    });
+
+    btn_power.addEventListener('mouseleave', function(e) {
+        var req = {btn_power_press: false};
+        socket.send(JSON.stringify(req));
+    });
+
+
+    var btn_reset = document.getElementById('btn_reset');
+    
+    btn_reset.addEventListener('mousedown', function(e) {
+        var req = {btn_reset_press: true};
+        socket.send(JSON.stringify(req));
+    });
+
+    btn_reset.addEventListener('mouseup', function(e) {
+        var req = {btn_reset_press: false};
+        socket.send(JSON.stringify(req));
+    });
+
+    btn_reset.addEventListener('mouseleave', function(e) {
+        var req = {btn_reset_press: false};
+        socket.send(JSON.stringify(req));
+    });
+
+
+    document.getElementById('default_tab').click();
     console.log('init done');
+}
+
+function format_uptime(uptime_seconds) {
+    var uptime = Math.floor(uptime_seconds);
+    var seconds = l02(uptime % 60);
+    var minutes = Math.floor(uptime / 60) % 60;
+    var hours = Math.floor(uptime / (60 * 60)) % 24;
+    var days = Math.floor(uptime / (60 * 60 * 24));
+
+    function l02(val) {
+        return ('00' + String(val)).slice(-2);
+    }
+
+    var res = `${l02(days)}d ${l02(hours)}:${l02(minutes)}:${l02(seconds)}`
+    res = 'Uptime: ' + res;
+
+    return res;
+}
+
+function format_temperature(temp_c) {
+    var temp = temp_c.toFixed(1);
+    var res = ('  ' + String(temp) + 'C').slice(-7);
+    res = 'Temperature: ' + res;
+    return res;
+}
+
+function dispatch_message(msg) {
+
+    if ('power_on' in msg) {
+        var btn_power = document.getElementById('btn_power');
+        var led_power = document.getElementById('led_power');
+
+        if (msg.power_on == true)
+        {
+            btn_power.style.backgroundImage = 'url("/power_btn_on.svg")';
+            led_power.style.backgroundImage = 'url("/led_green.svg")';
+        } else {
+            btn_power.style.backgroundImage = 'url("/power_btn_off.svg")';
+            led_power.style.backgroundImage = 'url("/led.svg")';
+        }
+    }
+
+
+    if ('hdd_on' in msg) {
+        var led_hdd = document.getElementById('led_hdd');
+
+        if (msg.hdd_on == true)
+        {
+            led_hdd.style.backgroundImage = 'url("/led_yellow.svg")';
+        } else {
+            led_hdd.style.backgroundImage = 'url("/led.svg")';
+        }
+    }
+
+
+    if ('pc_uptime' in msg) {
+        var info_uptime = document.getElementById('info_uptime');
+        info_uptime.setHTML(format_uptime(msg['pc_uptime']));
+    }
+
+    if ('temp' in msg) {
+        var info_temp = document.getElementById('info_temp');
+        info_temp.setHTML(format_temperature(msg['temp']));
+    }
 }
 
 
