@@ -1,10 +1,11 @@
 #ifndef _LWIPOPTS_H
 #define _LWIPOPTS_H
 
-#define MEM_LIBC_MALLOC             0
+#define MEM_LIBC_MALLOC             1
+#define MEMP_MEM_MALLOC             1
 
 #define MEM_ALIGNMENT               4
-#define MEM_SIZE                    12000
+#define MEM_SIZE                    1024 * 10
 #define MEMP_NUM_TCP_SEG            32
 #define MEMP_NUM_ARP_QUEUE          10
 #define PBUF_POOL_SIZE              24
@@ -37,8 +38,11 @@
 #define LWIP_DHCP_DOES_ACD_CHECK    0
 #define LWIP_INCLUDED_POLARSSL_SHA1 1
 
-#define DEFAULT_TCP_RECVMBOX_SIZE   2000
-#define DEFAULT_ACCEPTMBOX_SIZE     2000
+#define DEFAULT_TCP_RECVMBOX_SIZE   512
+#define DEFAULT_ACCEPTMBOX_SIZE     512
+
+// #define MEMP_NUM_TCP_PCB            10
+// #define MEMP_NUM_TCP_PCB_LISTEN     10
 
 #ifndef NDEBUG
 #define LWIP_DEBUG                  1
@@ -76,14 +80,16 @@
 #define DHCP_DEBUG                  LWIP_DBG_OFF
 
 #if !NO_SYS
-#define TCPIP_THREAD_STACKSIZE 1024 * 4
-#define DEFAULT_THREAD_STACKSIZE 1024 * 4
+#define TCPIP_THREAD_STACKSIZE 1024 * 32
+#define DEFAULT_THREAD_STACKSIZE 1024 * 16
 #define DEFAULT_RAW_RECVMBOX_SIZE 8
 #define TCPIP_MBOX_SIZE 8
 #define LWIP_TIMEVAL_PRIVATE 0
 
 // not necessary, can be done either way
 #define LWIP_TCPIP_CORE_LOCKING_INPUT 1
+
+#define TCPIP_THREAD_PRIO 10
 #endif
 
 #endif

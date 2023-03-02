@@ -1,12 +1,14 @@
 
+#include <netif/ppp/polarssl/sha1.h>
+#include <FreeRTOS.h>
+#include <task.h>
+#include <message_buffer.h>
+#include <pico/stdlib.h>
+#include <stdbool.h>
+
 #include "websocket.h"
 #include "http_server.h"
-#include "netif/ppp/polarssl/sha1.h"
-#include "FreeRTOS.h"
-#include "task.h"
-#include "pico/stdlib.h"
-
-#include <stdbool.h>
+#include "fpanel.h"
 
 #define WS_MAGIC_STRING "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 #define BASE64_ALPHABET "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
@@ -20,6 +22,8 @@
 
 #define WS_SEND_TASK_PRIORITY (tskIDLE_PRIORITY + 2UL)
 #define WS_RECV_TASK_PRIORITY (tskIDLE_PRIORITY + 3UL)
+
+#define WS_OUT_MSG_BUF_SIZE 300
 
 
 typedef struct
@@ -36,6 +40,8 @@ typedef struct
 
 static TaskHandle_t ws_send_task_handle = NULL;
 static TaskHandle_t ws_recv_task_handle = NULL;
+
+static MessageBufferHandle_t out_msg_buf = NULL;
 
 static void base64(const uint8_t *buf, uint16_t buflen,
                    uint8_t *output, uint16_t *outputlen)
@@ -110,13 +116,17 @@ static void send_message(struct netconn *conn, const uint8_t *data,
 
 static void ws_send_task(void *params)
 {
+    static uint8_t buf[128];
     struct netconn *conn = (struct netconn*)params;
-
+    size_t data_len;
 
     for (;;)
     {
-        vTaskDelay(5000);
-        send_message(conn, NULL, 0, WS_OPCODE_PING, 1);
+        data_len = xMessageBufferReceive(out_msg_buf, buf, sizeof(buf), 100);
+
+        send_message(conn, buf, data_len, WS_OPCODE_TEXT, 1);
+
+        // send_message(conn, NULL, 0, WS_OPCODE_PING, 1);
     }
 
 }
@@ -211,10 +221,12 @@ static bool dispatch_ws_message(struct netconn *conn, const ws_header_t *hdr,
             printf("Websocket message: ");
             for (uint64_t i = 0; i < hdr->payload_len; i++)
             {
-                printf("%c", buf[i] ^ hdr->mask[i % 4]);
+                buf[i] ^= hdr->mask[i % 4];
+                printf("%c", buf[i]);
             }
-
             printf("\n");
+        
+            fpanel_send(buf, hdr->payload_len, 100);
         }
         break;
 
@@ -303,6 +315,17 @@ static void ws_recv_task(void *params)
 }
 
 
+bool websocket_send(const uint8_t *msg, uint32_t msg_len, uint32_t max_delay)
+{
+    if (out_msg_buf != NULL)
+    {
+        return (xMessageBufferSend(out_msg_buf, msg, msg_len, max_delay) > 0);
+    }
+
+    return false;
+}
+
+
 void websocket_handshake(struct netconn *conn,
                          const uint8_t *sec_key,
                          uint16_t sec_key_len)
@@ -344,18 +367,23 @@ void websocket_handshake(struct netconn *conn,
     netconn_write(conn, HTTP_NEWLINE, CSTR_SIZE(HTTP_NEWLINE), NETCONN_NOCOPY);
     netconn_write(conn, HTTP_NEWLINE, CSTR_SIZE(HTTP_NEWLINE), NETCONN_NOCOPY);
 
+    if (out_msg_buf == NULL)
+    {
+        out_msg_buf = xMessageBufferCreate(WS_OUT_MSG_BUF_SIZE);
+    }
+
     xTaskCreate(ws_send_task,
                 "ws_send",
-                DEFAULT_THREAD_STACKSIZE,
+                1024 * 8,
                 conn,
                 WS_SEND_TASK_PRIORITY,
                 &ws_send_task_handle);
 
-
     xTaskCreate(ws_recv_task,
                 "ws_recv",
-                DEFAULT_THREAD_STACKSIZE,
+                1024 * 8,
                 conn,
                 WS_RECV_TASK_PRIORITY,
                 &ws_recv_task_handle);
+
 }

@@ -1,19 +1,26 @@
 
 #define _GNU_SOURCE /* for memmem */
-#include "lwip/opt.h"
-#include "lwip/arch.h"
-#include "lwip/api.h"
+
+#include <lwip/opt.h>
+#include <lwip/arch.h>
+#include <lwip/api.h>
+#include <FreeRTOS.h>
+#include <task.h>
+#include <string.h>
+#include <stdbool.h>
 
 #include "http_server.h"
 #include "fsdata.h"
 #include "websocket.h"
 
-#include <string.h>
-#include <stdbool.h>
 
 #ifndef HTTPD_DEBUG
 #define HTTPD_DEBUG         LWIP_DBG_OFF
 #endif
+
+#define HTTP_SERVER_TASK_PRIORITY 5
+
+static TaskHandle_t http_server_task_handle = NULL;
 
 const struct
 {
@@ -244,49 +251,51 @@ static void http_server_serve(struct netconn *conn)
 }
 
 
-/** The main function, never returns! */
-static void
-http_server_netconn_thread(void *arg)
+static void http_server_task(void *params)
 {
-  struct netconn *conn, *newconn;
-  err_t err;
-  LWIP_UNUSED_ARG(arg);
+    struct netconn *conn, *newconn;
+    err_t err;
 
-  /* Create a new TCP connection handle */
-  /* Bind to port 80 (HTTP) with default IP address */
-#if LWIP_IPV6
-  conn = netconn_new(NETCONN_TCP_IPV6);
-  netconn_bind(conn, IP6_ADDR_ANY, 80);
-#else /* LWIP_IPV6 */
-  conn = netconn_new(NETCONN_TCP);
-  netconn_bind(conn, IP_ADDR_ANY, 80);
-#endif /* LWIP_IPV6 */
-  LWIP_ERROR("http_server: invalid conn", (conn != NULL), return;);
+    /* Create a new TCP connection handle */
+    /* Bind to port 80 (HTTP) with default IP address */
 
-  /* Put the connection into LISTEN state */
-  netconn_listen(conn);
+    conn = netconn_new(NETCONN_TCP);
+    netconn_bind(conn, IP_ADDR_ANY, 80);
 
-  do
-  {
-    err = netconn_accept(conn, &newconn);
-    if (err == ERR_OK)
+    /* Put the connection into LISTEN state */
+    netconn_listen(conn);
+
+    for (;;)
     {
-      http_server_serve(newconn); 
+        err = netconn_accept(conn, &newconn);
+
+        if (err == ERR_OK)
+        {
+            http_server_serve(newconn);
+        }
+        else
+        {
+            printf("\nERROR: http server netconn_accept error: %d\n", err);
+            vTaskDelay(10);
+        }
     }
+
+    // for (;;)
+    // {
+    //     vTaskDelay(1000);
+    // }
   
-  } while(err == ERR_OK);
-  
-  LWIP_DEBUGF(HTTPD_DEBUG,
-    ("http_server_netconn_thread: netconn_accept received error %d, shutting down",
-    err));
-  
-  netconn_close(conn);
-  netconn_delete(conn);
+    netconn_close(conn);
+    netconn_delete(conn);
 }
 
 /** Initialize the HTTP server (start its thread) */
-void
-http_server_init(void)
+void http_server_init(void)
 {
-  sys_thread_new("http_server_netconn", http_server_netconn_thread, NULL, DEFAULT_THREAD_STACKSIZE, DEFAULT_THREAD_PRIO);
+    xTaskCreate(http_server_task,
+                "http_server",
+                1024 * 4,
+                NULL,
+                HTTP_SERVER_TASK_PRIORITY,
+                &http_server_task_handle);
 }

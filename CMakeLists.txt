@@ -23,6 +23,8 @@ add_executable(fpanel_remote
         http_server.c
         websocket.c
         dhcp_server.c
+        fpanel.c
+        mjson.c
         )
 
 target_compile_definitions(fpanel_remote PRIVATE
@@ -43,6 +45,7 @@ target_link_libraries(fpanel_remote
         pico_lwip_iperf
         pico_lwip_ppp
         pico_rand
+        hardware_adc
         FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
         )
 pico_add_extra_outputs(fpanel_remote)
