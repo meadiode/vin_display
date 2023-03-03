@@ -26,6 +26,12 @@
 #define WS_OUT_MSG_BUF_SIZE 300
 
 
+#define WS_LOG_LEVEL 4
+
+#ifdef WS_LOG_LEVEL
+# define WS_LOG(level, ...) do { if (level <= WS_LOG_LEVEL) { printf(__VA_ARGS__); } } while (0)
+#endif
+
 typedef struct
 {
     uint8_t  length;
@@ -43,20 +49,20 @@ static TaskHandle_t ws_recv_task_handle = NULL;
 
 static MessageBufferHandle_t out_msg_buf = NULL;
 
-static void base64(const uint8_t *buf, uint16_t buflen,
+static void base64(const uint8_t *buf, uint16_t buf_len,
                    uint8_t *output, uint16_t *outputlen)
 {
-    uint8_t pad = (3 - (buflen % 3)) % 3;
+    uint8_t pad = (3 - (buf_len % 3)) % 3;
     uint8_t b0, b1, b2;
     uint32_t idx = 0;
 
-    *outputlen = (buflen + pad) / 3 * 4;
+    *outputlen = (buf_len + pad) / 3 * 4;
 
-    for (uint32_t i = 0; i < (buflen + pad); i += 3)
+    for (uint32_t i = 0; i < (buf_len + pad); i += 3)
     {
-        b0 = (i + 0) >= buflen ? 0 : buf[i + 0];
-        b1 = (i + 1) >= buflen ? 0 : buf[i + 1];
-        b2 = (i + 2) >= buflen ? 0 : buf[i + 2];
+        b0 = (i + 0) >= buf_len ? 0 : buf[i + 0];
+        b1 = (i + 1) >= buf_len ? 0 : buf[i + 1];
+        b2 = (i + 2) >= buf_len ? 0 : buf[i + 2];
 
         output[idx++] = BASE64_ALPHABET[b0 >> 2];
         output[idx++] = BASE64_ALPHABET[((b0 & 3) << 4) | (b1 >> 4)];
@@ -73,24 +79,24 @@ static void base64(const uint8_t *buf, uint16_t buflen,
 
 
 static void send_message(struct netconn *conn, const uint8_t *data,
-                         uint32_t datalen, uint8_t opcode, uint8_t fin)
+                         uint32_t data_len, uint8_t opcode, uint8_t fin)
 {
     uint8_t hdr[10] = {0};
     uint8_t hdrlen;
 
     hdr[0] = (fin << 7) | opcode;
 
-    if (datalen <= 125)
+    if (data_len <= 125)
     {
         hdrlen = 2;
-        hdr[1] = (uint8_t)datalen;
+        hdr[1] = (uint8_t)data_len;
     }
-    else if (datalen < (1 << 16))
+    else if (data_len < (1 << 16))
     {
         hdrlen = 4;
         hdr[1] = 126;
-        hdr[2] = (datalen >> 8) & 0xff;
-        hdr[3] = datalen & 0xff;
+        hdr[2] = (data_len >> 8) & 0xff;
+        hdr[3] = data_len & 0xff;
     }
     else
     {
@@ -99,20 +105,21 @@ static void send_message(struct netconn *conn, const uint8_t *data,
 
         for (uint8_t i = 2, j = 7; i < 10; i++, j--)
         {
-            hdr[i] = (datalen >> (8 * j)) & 0xff;
+            hdr[i] = (data_len >> (8 * j)) & 0xff;
         }
     };
 
     netconn_write(conn, hdr, hdrlen, NETCONN_NOCOPY);
 
-    while (datalen)
+    while (data_len)
     {
-        uint32_t wsize = MIN(1024, datalen);
+        uint32_t wsize = MIN(1024, data_len);
         netconn_write(conn, data, wsize, NETCONN_NOCOPY);
         data = data + wsize;
-        datalen -= wsize;
+        data_len -= wsize;
     }
 }
+
 
 static void ws_send_task(void *params)
 {
@@ -124,17 +131,20 @@ static void ws_send_task(void *params)
     {
         data_len = xMessageBufferReceive(out_msg_buf, buf, sizeof(buf), 100);
 
-        send_message(conn, buf, data_len, WS_OPCODE_TEXT, 1);
+        if (data_len)
+        {
+            send_message(conn, buf, data_len, WS_OPCODE_TEXT, 1);
+        }
 
         // send_message(conn, NULL, 0, WS_OPCODE_PING, 1);
     }
 
 }
 
-static bool read_ws_header(const uint8_t *buf, uint16_t buflen,
+static bool ws_read_header(const uint8_t *buf, uint16_t buf_len,
                            ws_header_t *hdr)
 {
-    if (buflen < 2)
+    if (buf_len < 2)
     {
         return false;
     }
@@ -150,7 +160,7 @@ static bool read_ws_header(const uint8_t *buf, uint16_t buflen,
     {
         hdr->length += 4;
 
-        if (hdr->length > buflen)
+        if (hdr->length > buf_len)
         {
             return false;
         }
@@ -160,7 +170,7 @@ static bool read_ws_header(const uint8_t *buf, uint16_t buflen,
     {
         hdr->length += 2;
 
-        if (hdr->length > buflen)
+        if (hdr->length > buf_len)
         {
             return false;
         }
@@ -171,7 +181,7 @@ static bool read_ws_header(const uint8_t *buf, uint16_t buflen,
     {
         hdr->length += 8;
 
-        if (hdr->length > buflen)
+        if (hdr->length > buf_len)
         {
             return false;
         }
@@ -192,16 +202,28 @@ static bool read_ws_header(const uint8_t *buf, uint16_t buflen,
         }
     }
 
-    printf("Websocket header:\n");
-    printf("Fin:            %u\n", hdr->fin);
-    printf("Opcode:         %u\n", hdr->opcode);
-    printf("Payload length: %llu\n", hdr->payload_len);
-    printf("Masking:        %u\n", hdr->masking);
+    WS_LOG(4, "Websocket header:\n");
+    WS_LOG(4, "Fin:            %u\n", hdr->fin);
+    WS_LOG(4, "Opcode:         %u\n", hdr->opcode);
+    WS_LOG(4, "Payload length: %llu\n", hdr->payload_len);
+    WS_LOG(4, "Masking:        %u\n", hdr->masking);
     
     if (hdr->masking)
     {
-        printf("Mask:           0x%02x 0x%02x 0x%02x 0x%02x\n",
+        WS_LOG(4, "Mask:           0x%02x 0x%02x 0x%02x 0x%02x\n",
                hdr->mask[0], hdr->mask[1], hdr->mask[2], hdr->mask[3]);
+    }
+
+    if (hdr->fin == false || hdr->opcode == WS_OPCODE_CONT)
+    {
+        WS_LOG(1, "Websocket: error: multi-frame messages are not supported\n");
+        return false;
+    }
+
+    if ((buf_len - hdr->length) < hdr->payload_len)
+    {
+        WS_LOG(1, "Websocket: error: message length exceeds maximum\n");
+        return false;
     }
 
     return true;
@@ -218,20 +240,20 @@ static bool dispatch_ws_message(struct netconn *conn, const ws_header_t *hdr,
     
     case WS_OPCODE_TEXT:
         {
-            printf("Websocket message: ");
+            WS_LOG(4, "Websocket message: ");
             for (uint64_t i = 0; i < hdr->payload_len; i++)
             {
                 buf[i] ^= hdr->mask[i % 4];
-                printf("%c", buf[i]);
+                WS_LOG(4, "%c", buf[i]);
             }
-            printf("\n");
+            WS_LOG(4, "\n");
         
             fpanel_send(buf, hdr->payload_len, 100);
         }
         break;
 
     case WS_OPCODE_BINARY:
-        printf("Websocket: a binary message received");
+        WS_LOG(1, "Websocket: a binary message received");
         break;
 
     case WS_OPCODE_PING:
@@ -239,7 +261,7 @@ static bool dispatch_ws_message(struct netconn *conn, const ws_header_t *hdr,
         break;
 
     case WS_OPCODE_PONG:
-        printf("Websocket: PONG received\n");
+        WS_LOG(4, "Websocket: PONG received\n");
         break;
 
     case WS_OPCODE_CLOSE:
@@ -260,7 +282,7 @@ static void ws_recv_task(void *params)
     struct netconn *conn = (struct netconn*)params;
     struct netbuf *inbuf;
     uint8_t *buf;
-    uint16_t buflen;
+    uint16_t buf_len;
     err_t err;
     bool close = false;
 
@@ -270,23 +292,23 @@ static void ws_recv_task(void *params)
 
         if (ERR_OK == err)
         {
-            netbuf_data(inbuf, (void**)&buf, &buflen);
+            netbuf_data(inbuf, (void**)&buf, &buf_len);
             
-            printf("Websocket: received a message, raw length: %u\n", buflen);
+            WS_LOG(4, "Websocket: received a message, raw length: %u\n", buf_len);
 
             ws_header_t ws_hdr;
 
-            if (read_ws_header(buf, buflen, &ws_hdr))
+            if (ws_read_header(buf, buf_len, &ws_hdr))
             {
                 if (!dispatch_ws_message(conn, &ws_hdr,
                                          buf + (uint16_t)ws_hdr.length, &close))
                 {
-                    printf("Websocket: error dispatching message\n");
+                    WS_LOG(1, "Websocket: error dispatching message\n");
                 }
             }
             else
             {
-                printf("Websocket: error - malformed header\n");
+                WS_LOG(1, "Websocket: error: malformed header, or unsupported message type\n");
             }
         }
 
@@ -294,19 +316,22 @@ static void ws_recv_task(void *params)
 
         if (close)
         {
+            WS_LOG(1, "Websocket: connection closed by client\n");
             break;
         }
     }
 
     if (ws_send_task_handle != NULL)
     {
+        vTaskSuspend(ws_send_task_handle);
         vTaskDelete(ws_send_task_handle);
     }
 
     netconn_close(conn);
     netconn_delete(conn);
 
-    printf("Websocket: connection closed by client\n");
+    vMessageBufferDelete(out_msg_buf);
+    out_msg_buf = NULL;
     
     ws_send_task_handle = NULL;
     ws_recv_task_handle = NULL;
