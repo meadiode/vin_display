@@ -24,7 +24,7 @@
 #define TEST_TASK_PRIORITY              ( tskIDLE_PRIORITY + 1UL )
 
 #define SW_MAJOR_VERSION 0
-#define SW_MINOR_VERSION 430
+#define SW_MINOR_VERSION 432
 
 void main_task(__unused void *params) {
 
@@ -123,10 +123,10 @@ void vApplicationMallocFailedHook(void)
 {
 
     printf("malloc failure!\n");
-    // for (;;)
-    // {
-    //     __breakpoint();
-    // }
+    for (;;)
+    {
+        __breakpoint();
+    }
 }
 
 

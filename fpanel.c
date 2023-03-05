@@ -32,6 +32,7 @@ void fpanel_init(void)
 
     adc_gpio_init(POWER_LED_SENSE_GPIO);
     adc_gpio_init(HDD_LED_SENSE_GPIO);
+    adc_set_temp_sensor_enabled(true);
 
     msg_buf = xMessageBufferCreate(FPANEL_MSG_BUF_SIZE);
 
@@ -44,6 +45,20 @@ void fpanel_init(void)
 
 }
 
+static float read_onboard_temperature(void)
+{
+    /* 12-bit conversion, assume max value == ADC_VREF == 3.3 V */
+    const float conversion_factor = 3.3f / (1 << 12);
+
+    adc_select_input(TEMP_ADC_INPUT);
+
+    uint16_t adc_val = adc_read();
+    float adc = (float)adc_val * conversion_factor;
+    float temp_c = 27.0f - (adc - 0.706f) / 0.001721f;
+
+    return temp_c;
+}
+
 
 static void fpanel_task(void *params)
 {
@@ -51,6 +66,13 @@ static void fpanel_task(void *params)
     uint16_t pwr_ledsense = 0;
     uint16_t hdd_ledsense = 0;
     size_t data_len;
+    uint16_t temp_samples = 0;
+    float temp_c = 0.0;
+    float temp_sum = 0.0;
+    bool pc_powered = false;
+    bool hdd_active = false;
+    uint32_t pc_start_time = 0;
+    uint32_t pc_uptime = 0;
 
     for (;;)
     {
@@ -75,14 +97,47 @@ static void fpanel_task(void *params)
 
         adc_select_input(POWER_LED_SENSE_ADC_INPUT);
         pwr_ledsense = adc_read();
+        
+        if (pwr_ledsense >= 2000)
+        {
+            if (!pc_powered)
+            {
+                pc_start_time = xTaskGetTickCount();
+            }
+            pc_powered = true;
+        }
+        else
+        {
+            pc_powered = false;
+            pc_uptime = 0;
+        }
+
+        if (pc_powered)
+        {
+            pc_uptime = (xTaskGetTickCount() - pc_start_time);
+            pc_uptime /= configTICK_RATE_HZ;
+        }
 
         adc_select_input(HDD_LED_SENSE_ADC_INPUT);
         hdd_ledsense = adc_read();
+        hdd_active = hdd_ledsense >= 2000;
+
+        temp_sum += read_onboard_temperature();
+        temp_samples++;
+
+        if (temp_samples >= 100)
+        {
+            temp_c = temp_sum / (float)temp_samples;
+            temp_sum = 0.0;
+            temp_samples = 0;
+        }
 
         data_len = mjson_snprintf(buf, sizeof(buf),
-                                 "{%Q:%B, %Q:%B}",
-                                 "power_on", (pwr_ledsense >= 2000 ? 1 : 0),
-                                 "hdd_on", (hdd_ledsense >= 2000 ? 1 : 0));
+                                 "{%Q:%B, %Q:%B, %Q:%.*g, %Q:%u}",
+                                 "power_on", pc_powered,
+                                 "hdd_on", hdd_active,
+                                 "temp", 4, temp_c,
+                                 "pc_uptime", pc_uptime);
 
         websocket_send(buf, data_len, 10);
     }

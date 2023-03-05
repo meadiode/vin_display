@@ -24,7 +24,7 @@
 #define WS_RECV_TASK_PRIORITY (tskIDLE_PRIORITY + 3UL)
 
 #define WS_PING_PERIOD  1000
-#define WS_PING_TIMEOUT 3000
+#define WS_PING_TIMEOUT 5000
 
 #define WS_OUT_MSG_BUF_SIZE 300
 
@@ -86,6 +86,7 @@ static void send_message(struct netconn *conn, const uint8_t *data,
 {
     static uint8_t hdr[10] = {0};
     uint8_t hdrlen;
+    size_t bytes_written;
 
     hdr[0] = (fin << 7) | opcode;
 
@@ -112,12 +113,22 @@ static void send_message(struct netconn *conn, const uint8_t *data,
         }
     };
 
-    netconn_write(conn, hdr, hdrlen, NETCONN_NOCOPY);
+    netconn_write_partly(conn, hdr, hdrlen, NETCONN_NOCOPY, &bytes_written);
+
+    if (hdrlen != bytes_written)
+    {
+        WS_LOG(1, ">>>>>>>>>> hdrlen(%u) != bytes_written(%u)\n", hdrlen, bytes_written);
+    }
 
     while (data_len)
     {
         uint32_t wsize = MIN(1024, data_len);
-        netconn_write(conn, data, wsize, NETCONN_NOCOPY);
+        netconn_write_partly(conn, data, wsize, NETCONN_NOCOPY, &bytes_written);
+        if (wsize != bytes_written)
+        {
+            WS_LOG(1, ">>>>>>>>>> wsize(%u) != bytes_written(%u)\n", wsize, bytes_written);
+        }
+
         data = data + wsize;
         data_len -= wsize;
     }
@@ -137,6 +148,9 @@ static void ws_send_task(void *params)
     struct netconn *conn = (struct netconn*)params;
     size_t data_len;
 
+    netconn_thread_init();
+    netconn_set_sendtimeout(conn, 100);
+
     /* Send initial ping */
     send_ping(conn);
 
@@ -153,8 +167,17 @@ static void ws_send_task(void *params)
         {
             send_ping(conn);
         }
+
+        if (ulTaskNotifyTakeIndexed(1, pdTRUE, 0))
+        {
+            xTaskNotifyGiveIndexed(ws_recv_task_handle, 1);
+            WS_LOG(4, "Websocket: ws_send_task - termination signal received\n");
+            break;
+        };
     }
 
+    netconn_thread_cleanup();
+    vTaskDelete(NULL);
 }
 
 static bool ws_read_header(const uint8_t *buf, uint16_t buf_len,
@@ -303,6 +326,7 @@ static void ws_recv_task(void *params)
     bool close = false;
     TickType_t last_time = xTaskGetTickCount(), cur_time;
 
+    netconn_thread_init();
     netconn_set_recvtimeout(conn, WS_PING_PERIOD);
 
     for (;;)
@@ -358,8 +382,11 @@ static void ws_recv_task(void *params)
 
     if (ws_send_task_handle != NULL)
     {
-        vTaskSuspend(ws_send_task_handle);
-        vTaskDelete(ws_send_task_handle);
+        xTaskNotifyGiveIndexed(ws_send_task_handle, 1);
+        if (ulTaskNotifyTakeIndexed(1, pdTRUE, pdMS_TO_TICKS(10 * 1000)))
+        {
+            WS_LOG(1, "Websocket: ws_send_task terminated\n");
+        }
     }
 
     netconn_close(conn);
@@ -371,6 +398,7 @@ static void ws_recv_task(void *params)
     ws_send_task_handle = NULL;
     ws_recv_task_handle = NULL;
 
+    netconn_thread_cleanup();
     vTaskDelete(NULL);
 }
 

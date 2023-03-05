@@ -12,6 +12,7 @@
 
 #define POWER_LED_SENSE_ADC_INPUT 1
 #define HDD_LED_SENSE_ADC_INPUT   0
+#define TEMP_ADC_INPUT            4
 
 
 void fpanel_init(void);

@@ -44,11 +44,12 @@
 // #define MEMP_NUM_TCP_PCB            10
 // #define MEMP_NUM_TCP_PCB_LISTEN     10
 
+#define LWIP_TCPIP_TIMEOUT          1
 #define LWIP_NETCONN_SEM_PER_THREAD 1
 #define LWIP_NETCONN_FULLDUPLEX     1
 
 #define LWIP_SO_RCVTIMEO            1
-#define LWIP_SO_SNDTIMEO            0
+#define LWIP_SO_SNDTIMEO            1
 
 #ifndef NDEBUG
 #define LWIP_DEBUG                  1

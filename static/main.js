@@ -115,12 +115,12 @@ function dispatch_message(msg) {
 
     if ('pc_uptime' in msg) {
         var info_uptime = document.getElementById('info_uptime');
-        info_uptime.setHTML(format_uptime(msg['pc_uptime']));
+        info_uptime.innerHTML = format_uptime(msg['pc_uptime']);
     }
 
     if ('temp' in msg) {
         var info_temp = document.getElementById('info_temp');
-        info_temp.setHTML(format_temperature(msg['temp']));
+        info_temp.innerHTML = format_temperature(msg['temp']);
     }
 }
 
