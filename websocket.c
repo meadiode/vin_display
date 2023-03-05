@@ -23,6 +23,9 @@
 #define WS_SEND_TASK_PRIORITY (tskIDLE_PRIORITY + 2UL)
 #define WS_RECV_TASK_PRIORITY (tskIDLE_PRIORITY + 3UL)
 
+#define WS_PING_PERIOD  1000
+#define WS_PING_TIMEOUT 3000
+
 #define WS_OUT_MSG_BUF_SIZE 300
 
 
@@ -81,7 +84,7 @@ static void base64(const uint8_t *buf, uint16_t buf_len,
 static void send_message(struct netconn *conn, const uint8_t *data,
                          uint32_t data_len, uint8_t opcode, uint8_t fin)
 {
-    uint8_t hdr[10] = {0};
+    static uint8_t hdr[10] = {0};
     uint8_t hdrlen;
 
     hdr[0] = (fin << 7) | opcode;
@@ -121,11 +124,21 @@ static void send_message(struct netconn *conn, const uint8_t *data,
 }
 
 
+static void send_ping(struct netconn *conn)
+{
+    WS_LOG(4, "Websocket: sending PING\n");
+    send_message(conn, NULL, 0, WS_OPCODE_PING, 1);
+}
+
+
 static void ws_send_task(void *params)
 {
     static uint8_t buf[128];
     struct netconn *conn = (struct netconn*)params;
     size_t data_len;
+
+    /* Send initial ping */
+    send_ping(conn);
 
     for (;;)
     {
@@ -136,7 +149,10 @@ static void ws_send_task(void *params)
             send_message(conn, buf, data_len, WS_OPCODE_TEXT, 1);
         }
 
-        // send_message(conn, NULL, 0, WS_OPCODE_PING, 1);
+        if (ulTaskNotifyTake(pdTRUE, 0))
+        {
+            send_ping(conn);
+        }
     }
 
 }
@@ -280,11 +296,14 @@ static bool dispatch_ws_message(struct netconn *conn, const ws_header_t *hdr,
 static void ws_recv_task(void *params)
 {
     struct netconn *conn = (struct netconn*)params;
-    struct netbuf *inbuf;
+    struct netbuf *inbuf = NULL;
     uint8_t *buf;
     uint16_t buf_len;
     err_t err;
     bool close = false;
+    TickType_t last_time = xTaskGetTickCount(), cur_time;
+
+    netconn_set_recvtimeout(conn, WS_PING_PERIOD);
 
     for (;;)
     {
@@ -310,14 +329,30 @@ static void ws_recv_task(void *params)
             {
                 WS_LOG(1, "Websocket: error: malformed header, or unsupported message type\n");
             }
+
+            if (close)
+            {
+                WS_LOG(1, "Websocket: connection closed by client\n");
+                break;
+            }
+
+            netbuf_delete(inbuf);
+            last_time = xTaskGetTickCount();
         }
-
-        netbuf_delete(inbuf);
-
-        if (close)
+        else if (ERR_TIMEOUT == err)
         {
-            WS_LOG(1, "Websocket: connection closed by client\n");
-            break;
+            cur_time = xTaskGetTickCount();
+            
+            if ((cur_time - last_time) > WS_PING_TIMEOUT)
+            {
+                WS_LOG(1, "Websocket: closing connection due to client ping timeout\n");
+                break;
+            }
+            else if ((cur_time - last_time) > WS_PING_PERIOD)
+            {
+                /* Make the send task to issue a ping */
+                xTaskNotifyGive(ws_send_task_handle);
+            }
         }
     }
 

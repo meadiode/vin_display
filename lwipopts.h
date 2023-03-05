@@ -44,6 +44,12 @@
 // #define MEMP_NUM_TCP_PCB            10
 // #define MEMP_NUM_TCP_PCB_LISTEN     10
 
+#define LWIP_NETCONN_SEM_PER_THREAD 1
+#define LWIP_NETCONN_FULLDUPLEX     1
+
+#define LWIP_SO_RCVTIMEO            1
+#define LWIP_SO_SNDTIMEO            0
+
 #ifndef NDEBUG
 #define LWIP_DEBUG                  1
 #define LWIP_STATS                  1
@@ -89,7 +95,7 @@
 // not necessary, can be done either way
 #define LWIP_TCPIP_CORE_LOCKING_INPUT 1
 
-#define TCPIP_THREAD_PRIO 10
+#define TCPIP_THREAD_PRIO 1
 #endif
 
 #endif

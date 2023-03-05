@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
-# pioc-sdc: branch develop; sha: 36ba9e64bcd5bb159c395dd706f3905adfbef57b
+# pioc-sdc: branch master; sha: f396d05f8252d4670d4ea05c8b7ac938ef0cd381
 # FreeRTOS-Kernel: branch smp; sha: 0f9e6e5b521009f585018b47f7e8aa573f010206
 
 
