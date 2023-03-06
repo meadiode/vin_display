@@ -19,7 +19,5 @@ void fpanel_init(void);
 
 bool fpanel_send(const uint8_t *msg, uint32_t msg_len, uint32_t max_delay);
 
-void fpanel_power_btn(bool down);
-void fpanel_reset_btn(bool down);
 
 #endif /* __FPANEL_H */

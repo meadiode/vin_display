@@ -66,7 +66,7 @@
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS 5
 
 #define configUSE_TASK_NOTIFICATIONS            1
-#define configTASK_NOTIFICATION_ARRAY_ENTRIES   2
+#define configTASK_NOTIFICATION_ARRAY_ENTRIES   3
 
 /* System */
 #define configSTACK_DEPTH_TYPE                  uint32_t

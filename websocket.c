@@ -80,9 +80,38 @@ static void base64(const uint8_t *buf, uint16_t buf_len,
 
 }
 
+static void send_data(struct netconn *conn, const uint8_t *data,
+                      uint32_t data_len)
+{
+    size_t written, offset = 0;
+    uint8_t attempts = 3;
+    err_t err;
 
-static void send_message(struct netconn *conn, const uint8_t *data,
-                         uint32_t data_len, uint8_t opcode, uint8_t fin)
+    while (data_len && attempts)
+    {
+        err = netconn_write_partly(conn, data + offset, data_len,
+                                   NETCONN_NOCOPY, &written);
+        if (err != ERR_OK || written > data_len)
+        {
+            WS_LOG(1, "Websocket: error sending data buffer: %d\n", err);
+            vTaskDelay(1);
+            attempts--;
+
+            if (attempts == 0)
+            {
+                WS_LOG(1, "Websocket: giving up sending after a few attempts...\n");
+            }
+        }
+        else
+        {
+            data_len -= written;
+            offset += written;
+        }
+    }
+}
+
+static void ws_send(struct netconn *conn, const uint8_t *data,
+                           uint32_t data_len, uint8_t opcode, uint8_t fin)
 {
     static uint8_t hdr[10] = {0};
     uint8_t hdrlen;
@@ -113,32 +142,15 @@ static void send_message(struct netconn *conn, const uint8_t *data,
         }
     };
 
-    netconn_write_partly(conn, hdr, hdrlen, NETCONN_NOCOPY, &bytes_written);
-
-    if (hdrlen != bytes_written)
-    {
-        WS_LOG(1, ">>>>>>>>>> hdrlen(%u) != bytes_written(%u)\n", hdrlen, bytes_written);
-    }
-
-    while (data_len)
-    {
-        uint32_t wsize = MIN(1024, data_len);
-        netconn_write_partly(conn, data, wsize, NETCONN_NOCOPY, &bytes_written);
-        if (wsize != bytes_written)
-        {
-            WS_LOG(1, ">>>>>>>>>> wsize(%u) != bytes_written(%u)\n", wsize, bytes_written);
-        }
-
-        data = data + wsize;
-        data_len -= wsize;
-    }
+    send_data(conn, hdr, hdrlen);
+    send_data(conn, data, data_len);
 }
 
 
 static void send_ping(struct netconn *conn)
 {
     WS_LOG(4, "Websocket: sending PING\n");
-    send_message(conn, NULL, 0, WS_OPCODE_PING, 1);
+    ws_send(conn, NULL, 0, WS_OPCODE_PING, 1);
 }
 
 
@@ -149,7 +161,7 @@ static void ws_send_task(void *params)
     size_t data_len;
 
     netconn_thread_init();
-    netconn_set_sendtimeout(conn, 100);
+    netconn_set_sendtimeout(conn, 50);
 
     /* Send initial ping */
     send_ping(conn);
@@ -160,7 +172,7 @@ static void ws_send_task(void *params)
 
         if (data_len)
         {
-            send_message(conn, buf, data_len, WS_OPCODE_TEXT, 1);
+            ws_send(conn, buf, data_len, WS_OPCODE_TEXT, 1);
         }
 
         if (ulTaskNotifyTake(pdTRUE, 0))
@@ -296,7 +308,7 @@ static bool dispatch_ws_message(struct netconn *conn, const ws_header_t *hdr,
         break;
 
     case WS_OPCODE_PING:
-        send_message(conn, buf, 0, WS_OPCODE_PONG, 1);
+        ws_send(conn, buf, 0, WS_OPCODE_PONG, 1);
         break;
 
     case WS_OPCODE_PONG:
@@ -378,6 +390,13 @@ static void ws_recv_task(void *params)
                 xTaskNotifyGive(ws_send_task_handle);
             }
         }
+
+        if (ulTaskNotifyTakeIndexed(2, pdTRUE, 0))
+        {
+            WS_LOG(1, "Websocket: Closing connection - another cleint connected\n");
+            ws_send(conn, NULL, 0, WS_OPCODE_CLOSE, 1);
+            break;
+        }
     }
 
     if (ws_send_task_handle != NULL)
@@ -426,15 +445,12 @@ void websocket_handshake(struct netconn *conn,
 
     if (ws_send_task_handle != NULL || ws_recv_task_handle != NULL)
     {
-        printf("Websocket: error - exceeded max number(1) of websocket connections\n");
-        netconn_write(conn, HTTP_RESP_CODE_500, CSTR_SIZE(HTTP_RESP_CODE_500), NETCONN_NOCOPY);
-        netconn_write(conn, HTTP_NEWLINE, CSTR_SIZE(HTTP_NEWLINE), NETCONN_NOCOPY);
-        netconn_write(conn, HTTP_NEWLINE, CSTR_SIZE(HTTP_NEWLINE), NETCONN_NOCOPY);
-
-        netconn_close(conn);
-        netconn_delete(conn);
-
-        return;
+        /* Terminate current recv task */
+        xTaskNotifyGiveIndexed(ws_recv_task_handle, 2);   
+        while (ws_recv_task_handle)
+        {
+            vTaskDelay(100);
+        }
     }
 
     sha1_starts(&shactx);

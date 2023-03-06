@@ -256,6 +256,8 @@ static void http_server_task(void *params)
     struct netconn *conn, *newconn;
     err_t err;
 
+    netconn_thread_init();
+
     /* Create a new TCP connection handle */
     /* Bind to port 80 (HTTP) with default IP address */
 
