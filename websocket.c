@@ -29,7 +29,7 @@
 #define WS_OUT_MSG_BUF_SIZE 300
 
 
-#define WS_LOG_LEVEL 4
+#define WS_LOG_LEVEL 3
 
 #ifdef WS_LOG_LEVEL
 # define WS_LOG(level, ...) do { if (level <= WS_LOG_LEVEL) { printf(__VA_ARGS__); } } while (0)
@@ -478,14 +478,14 @@ void websocket_handshake(struct netconn *conn,
 
     xTaskCreate(ws_send_task,
                 "ws_send",
-                1024 * 8,
+                1024 * 1,
                 conn,
                 WS_SEND_TASK_PRIORITY,
                 &ws_send_task_handle);
 
     xTaskCreate(ws_recv_task,
                 "ws_recv",
-                1024 * 8,
+                1024 * 1,
                 conn,
                 WS_RECV_TASK_PRIORITY,
                 &ws_recv_task_handle);

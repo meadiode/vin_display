@@ -282,11 +282,6 @@ static void http_server_task(void *params)
         }
     }
 
-    // for (;;)
-    // {
-    //     vTaskDelay(1000);
-    // }
-  
     netconn_close(conn);
     netconn_delete(conn);
 }
@@ -296,7 +291,7 @@ void http_server_init(void)
 {
     xTaskCreate(http_server_task,
                 "http_server",
-                1024 * 4,
+                1024 * 1,
                 NULL,
                 HTTP_SERVER_TASK_PRIORITY,
                 &http_server_task_handle);

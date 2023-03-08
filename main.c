@@ -7,6 +7,7 @@
 #include <pico/cyw43_arch.h>
 #include <pico/stdlib.h>
 #include <lwip/ip4_addr.h>
+#include <hardware/timer.h>
 #include <hardware/adc.h>
 #include <FreeRTOS.h>
 #include <task.h>
@@ -24,7 +25,37 @@
 #define TEST_TASK_PRIORITY              ( tskIDLE_PRIORITY + 1UL )
 
 #define SW_MAJOR_VERSION 0
-#define SW_MINOR_VERSION 435
+#define SW_MINOR_VERSION 437
+
+
+static void printout_sys_stats(void)
+{
+    static TaskStatus_t tstats[20] = {0};
+    uint32_t total_rt;
+    uint8_t num, i;
+    float prc;
+
+    num = uxTaskGetSystemState(tstats, sizeof(tstats), &total_rt);
+
+    printf("\n\n\n");
+    printf("Task name       | Proc time %% | Stack HWM\n");
+    printf("-----------------------------------------\n");
+
+    for (i = 0; i < num; i++)
+    {
+        prc = (float)tstats[i].ulRunTimeCounter / (float)total_rt * 100.0f;
+
+        printf("%-16s|%12.2f%%|%10u\n",
+               tstats[i].pcTaskName, prc, tstats[i].usStackHighWaterMark);
+    }
+    printf("\n");
+    
+    prc = 1.0f - (float)xPortGetFreeHeapSize() / (float)configTOTAL_HEAP_SIZE;
+    prc *= 100.0f;
+    printf("Mem usage: %0.2f%%; %u free out of %u\n",
+           prc, xPortGetFreeHeapSize(), configTOTAL_HEAP_SIZE);
+}
+
 
 void main_task(__unused void *params) {
 
@@ -74,7 +105,8 @@ void main_task(__unused void *params) {
 
     for (;;)
     {
-        vTaskDelay(100);
+        vTaskDelay(5000);
+        printout_sys_stats();
     }
 
     cyw43_arch_deinit();
@@ -137,4 +169,10 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask,
     {
         __breakpoint();
     }
+}
+
+
+uint32_t stats_get_time(void)
+{
+    return time_us_32();
 }
