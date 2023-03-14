@@ -84,12 +84,12 @@ static void fpanel_task(void *params)
 
             if (mjson_get_bool(buf, data_len, "$.btn_power_press", &res))
             {
-                gpio_put(POWER_BTN_GPIO, res);
+                // gpio_put(POWER_BTN_GPIO, res);
             }
 
             if (mjson_get_bool(buf, data_len, "$.btn_reset_press", &res))
             {
-                gpio_put(RESET_BTN_GPIO, res);
+                // gpio_put(RESET_BTN_GPIO, res);
             }
 
             data_len = xMessageBufferReceive(msg_buf, buf, sizeof(buf), 0);

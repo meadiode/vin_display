@@ -1,0 +1,80 @@
+
+.define TW  10
+.define TDH 10
+
+.program display_four
+.side_set 1
+
+.wrap_target
+    out null, 1 side 1
+    out pins, 7 side 1
+    set pins, 3 side 1
+    nop side 0 [TW]
+    nop side 1 [TDH]
+
+    out null, 1 side 1
+    out pins, 7 side 1
+    set pins, 2 side 1
+    nop side 0 [TW]
+    nop side 1 [TDH]
+
+    out null, 1 side 1
+    out pins, 7 side 1
+    set pins, 1 side 1
+    nop side 0 [TW]
+    nop side 1 [TDH]
+
+    out null, 1 side 1
+    out pins, 7 side 1
+    set pins, 0 side 1
+    nop side 0 [TW]
+    nop side 1 [TDH]
+.wrap
+
+
+% c-sdk {
+#include "hardware/clocks.h"
+
+#define MDL2416C_CHAR_NUM_BITS     7 
+#define MDL2416C_CHAR_POS_NUM_BITS 2 
+
+static inline void mdl2416c_program_init(PIO pio, uint sm, uint offset,
+                                         uint char_pin_base,
+                                         uint char_pos_pin_base,
+                                         uint write_pin)
+{
+    uint8_t i;
+
+    for (i = 0; i < MDL2416C_CHAR_NUM_BITS; i++)
+    {
+        pio_gpio_init(pio, char_pin_base + i);
+    }
+    
+    for (i = 0; i < MDL2416C_CHAR_POS_NUM_BITS; i++)
+    {
+        pio_gpio_init(pio, char_pos_pin_base + i);
+    }
+
+    pio_gpio_init(pio, write_pin);
+
+    pio_sm_set_consecutive_pindirs(pio, sm, char_pin_base,
+                                   MDL2416C_CHAR_NUM_BITS, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, char_pos_pin_base,
+                                   MDL2416C_CHAR_POS_NUM_BITS, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, write_pin, 1, true);
+    
+    pio_sm_config c = display_four_program_get_default_config(offset);
+    sm_config_set_out_shift(&c, false, true, 32);
+    
+    sm_config_set_out_pins(&c, char_pin_base, MDL2416C_CHAR_NUM_BITS);
+    sm_config_set_set_pins(&c, char_pos_pin_base, MDL2416C_CHAR_POS_NUM_BITS);
+    sm_config_set_sideset_pins(&c, write_pin);
+
+    // sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+
+    sm_config_set_clkdiv(&c, 5.0);
+
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}

@@ -27,6 +27,8 @@ add_executable(fpanel_remote
         mjson.c
         )
 
+pico_generate_pio_header(fpanel_remote ${CMAKE_CURRENT_LIST_DIR}/mdl2416c.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR})
+
 target_compile_definitions(fpanel_remote PRIVATE
         WIFI_SSID=\"${WIFI_SSID}\"
         WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
@@ -35,13 +37,16 @@ target_compile_definitions(fpanel_remote PRIVATE
         PPP_SUPPORT=1
         PING_USE_SOCKETS=1
         )
+
 target_include_directories(fpanel_remote PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${PICO_LWIP_CONTRIB_PATH}/apps/httpserver
         )
+
 target_link_libraries(fpanel_remote
         pico_cyw43_arch_lwip_sys_freertos
         pico_stdlib
+        hardware_pio
         pico_lwip_iperf
         pico_lwip_ppp
         pico_rand
