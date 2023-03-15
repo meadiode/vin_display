@@ -2,33 +2,31 @@
 .define TW  10
 .define TDH 10
 
-.program display_four
+.program display_char
 .side_set 1
 
 .wrap_target
     out null, 1 side 1
     out pins, 7 side 1
-    set pins, 3 side 1
-    nop side 0 [TW]
-    nop side 1 [TDH]
+    
+    irq wait 0 side 1
 
-    out null, 1 side 1
-    out pins, 7 side 1
-    set pins, 2 side 1
     nop side 0 [TW]
     nop side 1 [TDH]
+.wrap
 
-    out null, 1 side 1
-    out pins, 7 side 1
-    set pins, 1 side 1
-    nop side 0 [TW]
-    nop side 1 [TDH]
 
-    out null, 1 side 1
-    out pins, 7 side 1
-    set pins, 0 side 1
-    nop side 0 [TW]
-    nop side 1 [TDH]
+.program set_char_pos
+
+.wrap_target
+    out null, 30
+    set x, 3
+
+next_char:
+    wait 1 irq 0
+    mov pins, x
+    irq clear 0
+    jmp x--, next_char
 .wrap
 
 
@@ -38,7 +36,8 @@
 #define MDL2416C_CHAR_NUM_BITS     7 
 #define MDL2416C_CHAR_POS_NUM_BITS 2 
 
-static inline void mdl2416c_program_init(PIO pio, uint sm, uint offset,
+static inline void mdl2416c_program_init(PIO pio, uint sm1, uint sm2,
+                                         uint offset1, uint offset2,
                                          uint char_pin_base,
                                          uint char_pos_pin_base,
                                          uint write_pin)
@@ -57,24 +56,36 @@ static inline void mdl2416c_program_init(PIO pio, uint sm, uint offset,
 
     pio_gpio_init(pio, write_pin);
 
-    pio_sm_set_consecutive_pindirs(pio, sm, char_pin_base,
+    pio_sm_set_consecutive_pindirs(pio, sm1, char_pin_base,
                                    MDL2416C_CHAR_NUM_BITS, true);
-    pio_sm_set_consecutive_pindirs(pio, sm, char_pos_pin_base,
+    pio_sm_set_consecutive_pindirs(pio, sm1, write_pin, 1, true);
+
+    pio_sm_set_consecutive_pindirs(pio, sm2, char_pos_pin_base,
                                    MDL2416C_CHAR_POS_NUM_BITS, true);
-    pio_sm_set_consecutive_pindirs(pio, sm, write_pin, 1, true);
     
-    pio_sm_config c = display_four_program_get_default_config(offset);
+    pio_sm_config c;
+
+    c = display_char_program_get_default_config(offset1);
     sm_config_set_out_shift(&c, false, true, 32);
-    
     sm_config_set_out_pins(&c, char_pin_base, MDL2416C_CHAR_NUM_BITS);
-    sm_config_set_set_pins(&c, char_pos_pin_base, MDL2416C_CHAR_POS_NUM_BITS);
+    // sm_config_set_set_pins(&c, char_pos_pin_base, MDL2416C_CHAR_POS_NUM_BITS);
     sm_config_set_sideset_pins(&c, write_pin);
-
     // sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
-
     sm_config_set_clkdiv(&c, 5.0);
 
-    pio_sm_init(pio, sm, offset, &c);
-    pio_sm_set_enabled(pio, sm, true);
+    pio_sm_init(pio, sm1, offset1, &c);
+
+
+    c = set_char_pos_program_get_default_config(offset2);
+    sm_config_set_out_shift(&c, false, true, 32);
+    sm_config_set_out_pins(&c, char_pos_pin_base, MDL2416C_CHAR_POS_NUM_BITS);
+
+    // sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+    sm_config_set_clkdiv(&c, 5.0);
+    pio_sm_init(pio, sm2, offset2, &c);
+
+
+    pio_sm_set_enabled(pio, sm1, true);
+    pio_sm_set_enabled(pio, sm2, true);
 }
 %}

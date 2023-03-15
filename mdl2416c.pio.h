@@ -9,55 +9,73 @@
 #endif
 
 // ------------ //
-// display_four //
+// display_char //
 // ------------ //
 
-#define display_four_wrap_target 0
-#define display_four_wrap 19
+#define display_char_wrap_target 0
+#define display_char_wrap 4
 
-static const uint16_t display_four_program_instructions[] = {
+static const uint16_t display_char_program_instructions[] = {
             //     .wrap_target
     0x7061, //  0: out    null, 1         side 1     
     0x7007, //  1: out    pins, 7         side 1     
-    0xf003, //  2: set    pins, 3         side 1     
+    0xd020, //  2: irq    wait 0          side 1     
     0xaa42, //  3: nop                    side 0 [10]
     0xba42, //  4: nop                    side 1 [10]
-    0x7061, //  5: out    null, 1         side 1     
-    0x7007, //  6: out    pins, 7         side 1     
-    0xf002, //  7: set    pins, 2         side 1     
-    0xaa42, //  8: nop                    side 0 [10]
-    0xba42, //  9: nop                    side 1 [10]
-    0x7061, // 10: out    null, 1         side 1     
-    0x7007, // 11: out    pins, 7         side 1     
-    0xf001, // 12: set    pins, 1         side 1     
-    0xaa42, // 13: nop                    side 0 [10]
-    0xba42, // 14: nop                    side 1 [10]
-    0x7061, // 15: out    null, 1         side 1     
-    0x7007, // 16: out    pins, 7         side 1     
-    0xf000, // 17: set    pins, 0         side 1     
-    0xaa42, // 18: nop                    side 0 [10]
-    0xba42, // 19: nop                    side 1 [10]
             //     .wrap
 };
 
 #if !PICO_NO_HARDWARE
-static const struct pio_program display_four_program = {
-    .instructions = display_four_program_instructions,
-    .length = 20,
+static const struct pio_program display_char_program = {
+    .instructions = display_char_program_instructions,
+    .length = 5,
     .origin = -1,
 };
 
-static inline pio_sm_config display_four_program_get_default_config(uint offset) {
+static inline pio_sm_config display_char_program_get_default_config(uint offset) {
     pio_sm_config c = pio_get_default_sm_config();
-    sm_config_set_wrap(&c, offset + display_four_wrap_target, offset + display_four_wrap);
+    sm_config_set_wrap(&c, offset + display_char_wrap_target, offset + display_char_wrap);
     sm_config_set_sideset(&c, 1, false, false);
+    return c;
+}
+#endif
+
+// ------------ //
+// set_char_pos //
+// ------------ //
+
+#define set_char_pos_wrap_target 0
+#define set_char_pos_wrap 5
+
+static const uint16_t set_char_pos_program_instructions[] = {
+            //     .wrap_target
+    0x607e, //  0: out    null, 30                   
+    0xe023, //  1: set    x, 3                       
+    0x20c0, //  2: wait   1 irq, 0                   
+    0xa001, //  3: mov    pins, x                    
+    0xc040, //  4: irq    clear 0                    
+    0x0042, //  5: jmp    x--, 2                     
+            //     .wrap
+};
+
+#if !PICO_NO_HARDWARE
+static const struct pio_program set_char_pos_program = {
+    .instructions = set_char_pos_program_instructions,
+    .length = 6,
+    .origin = -1,
+};
+
+static inline pio_sm_config set_char_pos_program_get_default_config(uint offset) {
+    pio_sm_config c = pio_get_default_sm_config();
+    sm_config_set_wrap(&c, offset + set_char_pos_wrap_target, offset + set_char_pos_wrap);
     return c;
 }
 
 #include "hardware/clocks.h"
 #define MDL2416C_CHAR_NUM_BITS     7 
 #define MDL2416C_CHAR_POS_NUM_BITS 2 
-static inline void mdl2416c_program_init(PIO pio, uint sm, uint offset,
+static inline void mdl2416c_program_init(PIO pio, uint sm1, uint sm2,
+                                         uint offset1, uint offset2,
                                          uint char_pin_base,
                                          uint char_pos_pin_base,
                                          uint write_pin)
@@ -72,20 +90,28 @@ static inline void mdl2416c_program_init(PIO pio, uint sm, uint offset,
         pio_gpio_init(pio, char_pos_pin_base + i);
     }
     pio_gpio_init(pio, write_pin);
-    pio_sm_set_consecutive_pindirs(pio, sm, char_pin_base,
+    pio_sm_set_consecutive_pindirs(pio, sm1, char_pin_base,
                                    MDL2416C_CHAR_NUM_BITS, true);
-    pio_sm_set_consecutive_pindirs(pio, sm, char_pos_pin_base,
+    pio_sm_set_consecutive_pindirs(pio, sm1, write_pin, 1, true);
+    pio_sm_set_consecutive_pindirs(pio, sm2, char_pos_pin_base,
                                    MDL2416C_CHAR_POS_NUM_BITS, true);
-    pio_sm_set_consecutive_pindirs(pio, sm, write_pin, 1, true);
-    pio_sm_config c = display_four_program_get_default_config(offset);
+    pio_sm_config c;
+    c = display_char_program_get_default_config(offset1);
     sm_config_set_out_shift(&c, false, true, 32);
     sm_config_set_out_pins(&c, char_pin_base, MDL2416C_CHAR_NUM_BITS);
-    sm_config_set_set_pins(&c, char_pos_pin_base, MDL2416C_CHAR_POS_NUM_BITS);
+    // sm_config_set_set_pins(&c, char_pos_pin_base, MDL2416C_CHAR_POS_NUM_BITS);
     sm_config_set_sideset_pins(&c, write_pin);
     // sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
     sm_config_set_clkdiv(&c, 5.0);
-    pio_sm_init(pio, sm, offset, &c);
-    pio_sm_set_enabled(pio, sm, true);
+    pio_sm_init(pio, sm1, offset1, &c);
+    c = set_char_pos_program_get_default_config(offset2);
+    sm_config_set_out_shift(&c, false, true, 32);
+    sm_config_set_out_pins(&c, char_pos_pin_base, MDL2416C_CHAR_POS_NUM_BITS);
+    // sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+    sm_config_set_clkdiv(&c, 5.0);
+    pio_sm_init(pio, sm2, offset2, &c);
+    pio_sm_set_enabled(pio, sm1, true);
+    pio_sm_set_enabled(pio, sm2, true);
 }
 
 #endif
