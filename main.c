@@ -4,14 +4,13 @@
 #include <lwip/ip4_addr.h>
 #include <hardware/timer.h>
 #include <hardware/adc.h>
-#include <hardware/pio.h>
 #include <FreeRTOS.h>
 #include <task.h>
 
 #include "http_server.h"
 #include "dhcp_server.h"
 #include "fpanel.h"
-#include "mdl2416c.pio.h"
+#include "mdl2416c.h"
 
 
 #define SW_MAJOR_VERSION 0
@@ -101,6 +100,8 @@ void main_task(__unused void *params) {
 
     fpanel_init();
 
+    mdl2416c_print("DONE");
+
     printf("Starting server at %s on port %u\n",
            ip4addr_ntoa(netif_ip4_addr(netif_list)), 80);
     http_server_init();
@@ -115,76 +116,15 @@ void main_task(__unused void *params) {
 }
 
 
-#define MDL_D0  2
-#define MDL_D1  3
-#define MDL_D2  4
-#define MDL_D3  5
-#define MDL_D4  6
-#define MDL_D5  7
-#define MDL_D6  8
-
-#define MDL_A0  16
-#define MDL_A1  17
-
-#define MDL_BL  9
-#define MDL_WR  18
-#define MDL_CU  19
-#define MDL_CUE 20
-#define MDL_CLR 21
-#define MDL_CE 22
-
-
-
 int main( void )
 {
     stdio_init_all();
 
     adc_init();
 
-    gpio_init(MDL_BL);
-    gpio_init(MDL_CU);
-    gpio_init(MDL_CUE);
-    gpio_init(MDL_CLR);
-    gpio_init(MDL_CE);
+    mdl2416c_init();
 
-    gpio_set_dir(MDL_BL, GPIO_OUT);
-    gpio_set_dir(MDL_CU, GPIO_OUT);
-    gpio_set_dir(MDL_CUE, GPIO_OUT);
-    gpio_set_dir(MDL_CLR, GPIO_OUT);
-    gpio_set_dir(MDL_CE, GPIO_OUT); 
-
-    gpio_put(MDL_CU, 1);
-    gpio_put(MDL_CUE, 0);
-    gpio_put(MDL_CLR, 1);
-    gpio_put(MDL_BL, 1);
-
-    gpio_put(MDL_CE, 0);
-
-    PIO pio = pio0;
-    uint offset = pio_add_program(pio, &display_four_program);
-
-    mdl2416c_program_init(pio, 0, offset, MDL_D0, MDL_A0, MDL_WR);
-
-
-    const char *words[] = {"COAX", "PINT", "PUNK", "SOCK", "PEAK",
-                           "WELD", "LUSH", "FIZZ", "CLIP", "CLAM",
-                           "GLUM", "GUSH", "CURL", "COZY", "YOGA",
-                           "ROIL", "WISP", "MATH", "NOSH", "NOOK",
-                           "GLOB", "HUFF", "PUFF", "ZEST", "WARY",
-                           "DRIP", "DUNK", "JAZZ", "JIVE", "CORK",
-                           "RASP", "RAZE", "QUID", "QUIT", "LYNX",
-                           "LUCK", "BOLT", "HYPE", "HOAX", "WHAM"};
-
-    for (uint32_t i = 0; i < 100; i++)
-    {
-        for (uint32_t j = 0; j < sizeof(words) / sizeof(uint8_t*); j++)
-        {
-            const uint8_t *w = words[j];
-
-            pio_sm_put_blocking(pio, 0, w[0] << 24 | w[1] << 16 | w[2] << 8 | w[3]);
-            sleep_ms(500);            
-        }
-    }
+    mdl2416c_print("STRT");
 
     printf("Starting FreeRTOS SMP on both cores\n");
     

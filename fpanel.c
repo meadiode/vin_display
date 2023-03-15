@@ -10,6 +10,7 @@
 #include "fpanel.h"
 #include "mjson.h"
 #include "websocket.h"
+#include "mdl2416c.h"
 
 #define FPANEL_TASK_PRIORITY 5
 #define FPANEL_MSG_BUF_SIZE 300
@@ -21,14 +22,14 @@ static void fpanel_task(void *params);
 
 void fpanel_init(void)
 {
-    gpio_init(POWER_BTN_GPIO);
-    gpio_init(RESET_BTN_GPIO);
+    // gpio_init(POWER_BTN_GPIO);
+    // gpio_init(RESET_BTN_GPIO);
     
-    gpio_set_dir(POWER_BTN_GPIO, GPIO_OUT);
-    gpio_set_dir(RESET_BTN_GPIO, GPIO_OUT);
+    // gpio_set_dir(POWER_BTN_GPIO, GPIO_OUT);
+    // gpio_set_dir(RESET_BTN_GPIO, GPIO_OUT);
     
-    gpio_put(POWER_BTN_GPIO, 0);
-    gpio_put(RESET_BTN_GPIO, 0);
+    // gpio_put(POWER_BTN_GPIO, 0);
+    // gpio_put(RESET_BTN_GPIO, 0);
 
     adc_gpio_init(POWER_LED_SENSE_GPIO);
     adc_gpio_init(HDD_LED_SENSE_GPIO);
@@ -73,6 +74,7 @@ static void fpanel_task(void *params)
     bool hdd_active = false;
     uint32_t pc_start_time = 0;
     uint32_t pc_uptime = 0;
+    uint8_t dbuf[16];
 
     for (;;)
     {
@@ -84,13 +86,35 @@ static void fpanel_task(void *params)
 
             if (mjson_get_bool(buf, data_len, "$.btn_power_press", &res))
             {
+                if (res)
+                {
+                    mdl2416c_print("BPWR");
+                }
+                else
+                {
+                    mdl2416c_print("");
+                }
                 // gpio_put(POWER_BTN_GPIO, res);
             }
 
             if (mjson_get_bool(buf, data_len, "$.btn_reset_press", &res))
             {
+                if (res)
+                {
+                    mdl2416c_print("BRST");
+                }
+                else
+                {
+                    mdl2416c_print("");
+                }
                 // gpio_put(RESET_BTN_GPIO, res);
             }
+
+            if (mjson_get_string(buf, data_len, "$.disp_str", dbuf, sizeof(dbuf)) != -1)
+            {
+                mdl2416c_print(dbuf);
+            }
+
 
             data_len = xMessageBufferReceive(msg_buf, buf, sizeof(buf), 0);
         }
