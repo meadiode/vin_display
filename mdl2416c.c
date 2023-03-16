@@ -38,14 +38,14 @@ void mdl2416c_init(void)
 
     gpio_put(MDL_CE_PIN, 0);
 
-    // PIO pio = pio0;
-    // uint offset1 = pio_add_program(pio, &display_char_program);
-    // uint offset2 = pio_add_program(pio, &set_char_pos_program);
+    PIO pio = pio0;
+    uint offset1 = pio_add_program(pio, &display_char_program);
+    uint offset2 = pio_add_program(pio, &set_char_pos_program);
 
-    // mdl2416c_program_init(pio, 0, 1, offset1, offset2,
-    //                       MDL_DATA_START_PIN,
-    //                       MDL_CHAR_POS_START_PIN,
-    //                       MDL_WR_PIN);
+    mdl2416c_program_init(pio, 0, 1, offset1, offset2,
+                          MDL_DATA_START_PIN,
+                          MDL_CHAR_POS_START_PIN,
+                          MDL_WR_PIN);
 
 
     // const char *words[] = {"COAX", "PINT", "PUNK", "SOCK", "PEAK",
@@ -97,8 +97,7 @@ void mdl2416c_print(const uint8_t *str)
             }
         }
 
-        // pio_sm_put(pio0, 0, buf[0] << 24 | buf[1] << 16 | buf[2] << 8 | buf[3]);
-        // pio_sm_put(pio0, 1, nchars);
+        pio_sm_put(pio0, 0, buf[0] << 24 | buf[1] << 16 | buf[2] << 8 | buf[3]);
     }
 }
 

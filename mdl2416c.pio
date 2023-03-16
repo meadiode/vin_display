@@ -19,7 +19,6 @@
 .program set_char_pos
 
 .wrap_target
-    out null, 30
     set x, 3
 
 next_char:

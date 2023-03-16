@@ -86,27 +86,27 @@ static void fpanel_task(void *params)
 
             if (mjson_get_bool(buf, data_len, "$.btn_power_press", &res))
             {
-                // if (res)
-                // {
-                //     mdl2416c_print("BPWR");
-                // }
-                // else
-                // {
-                //     mdl2416c_print("");
-                // }
+                if (res)
+                {
+                    mdl2416c_print("BPWR");
+                }
+                else
+                {
+                    mdl2416c_print("");
+                }
                 // gpio_put(POWER_BTN_GPIO, res);
             }
 
             if (mjson_get_bool(buf, data_len, "$.btn_reset_press", &res))
             {
-                // if (res)
-                // {
-                //     mdl2416c_print("BRST");
-                // }
-                // else
-                // {
-                //     mdl2416c_print("");
-                // }
+                if (res)
+                {
+                    mdl2416c_print("BRST");
+                }
+                else
+                {
+                    mdl2416c_print("");
+                }
                 // gpio_put(RESET_BTN_GPIO, res);
             }
 

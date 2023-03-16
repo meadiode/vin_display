@@ -45,23 +45,22 @@ static inline pio_sm_config display_char_program_get_default_config(uint offset)
 // ------------ //
 
 #define set_char_pos_wrap_target 0
-#define set_char_pos_wrap 5
+#define set_char_pos_wrap 4
 
 static const uint16_t set_char_pos_program_instructions[] = {
             //     .wrap_target
-    0x607e, //  0: out    null, 30                   
-    0xe023, //  1: set    x, 3                       
-    0x20c0, //  2: wait   1 irq, 0                   
-    0xa001, //  3: mov    pins, x                    
-    0xc040, //  4: irq    clear 0                    
-    0x0042, //  5: jmp    x--, 2                     
+    0xe023, //  0: set    x, 3                       
+    0x20c0, //  1: wait   1 irq, 0                   
+    0xa001, //  2: mov    pins, x                    
+    0xc040, //  3: irq    clear 0                    
+    0x0041, //  4: jmp    x--, 1                     
             //     .wrap
 };
 
 #if !PICO_NO_HARDWARE
 static const struct pio_program set_char_pos_program = {
     .instructions = set_char_pos_program_instructions,
-    .length = 6,
+    .length = 5,
     .origin = -1,
 };
 
