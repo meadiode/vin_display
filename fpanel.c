@@ -10,7 +10,7 @@
 #include "fpanel.h"
 #include "mjson.h"
 #include "websocket.h"
-#include "mdl2416c.h"
+#include "hdsp2112.h"
 
 #define FPANEL_TASK_PRIORITY 5
 #define FPANEL_MSG_BUF_SIZE 300
@@ -86,34 +86,34 @@ static void fpanel_task(void *params)
 
             if (mjson_get_bool(buf, data_len, "$.btn_power_press", &res))
             {
-                if (res)
-                {
-                    mdl2416c_print("BPWR");
-                }
-                else
-                {
-                    mdl2416c_print("");
-                }
+                // if (res)
+                // {
+                //     mdl2416c_print("BPWR");
+                // }
+                // else
+                // {
+                //     mdl2416c_print("");
+                // }
                 // gpio_put(POWER_BTN_GPIO, res);
             }
 
             if (mjson_get_bool(buf, data_len, "$.btn_reset_press", &res))
             {
-                if (res)
-                {
-                    mdl2416c_print("BRST");
-                }
-                else
-                {
-                    mdl2416c_print("");
-                }
+                // if (res)
+                // {
+                //     mdl2416c_print("BRST");
+                // }
+                // else
+                // {
+                //     mdl2416c_print("");
+                // }
                 // gpio_put(RESET_BTN_GPIO, res);
             }
 
-            if (mjson_get_string(buf, data_len, "$.disp_str", dbuf, sizeof(dbuf)) != -1)
-            {
-                mdl2416c_print(dbuf);
-            }
+            // if (mjson_get_string(buf, data_len, "$.disp_str", dbuf, sizeof(dbuf)) != -1)
+            // {
+            //     mdl2416c_print(dbuf);
+            // }
 
 
             data_len = xMessageBufferReceive(msg_buf, buf, sizeof(buf), 0);

@@ -26,6 +26,7 @@ add_executable(fpanel_remote
         fpanel.c
         mjson.c
         mdl2416c.c
+        hdsp2112.c
         )
 
 pico_generate_pio_header(fpanel_remote ${CMAKE_CURRENT_LIST_DIR}/mdl2416c.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR})
