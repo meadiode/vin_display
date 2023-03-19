@@ -39,8 +39,8 @@ void mdl2416c_init(void)
     gpio_put(MDL_CE_PIN, 0);
 
     PIO pio = pio0;
-    uint offset1 = pio_add_program(pio, &display_char_program);
-    uint offset2 = pio_add_program(pio, &set_char_pos_program);
+    uint offset1 = pio_add_program(pio, &mdl2416c_display_char_program);
+    uint offset2 = pio_add_program(pio, &mdl2416c_set_char_pos_program);
 
     mdl2416c_program_init(pio, 0, 1, offset1, offset2,
                           MDL_DATA_START_PIN,

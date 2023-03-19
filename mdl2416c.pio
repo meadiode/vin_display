@@ -2,7 +2,7 @@
 .define TW  10
 .define TDH 10
 
-.program display_char
+.program mdl2416c_display_char
 .side_set 1
 
 .wrap_target
@@ -16,7 +16,7 @@
 .wrap
 
 
-.program set_char_pos
+.program mdl2416c_set_char_pos
 
 .wrap_target
     set x, 3
@@ -33,7 +33,7 @@ next_char:
 #include "hardware/clocks.h"
 
 #define MDL2416C_CHAR_NUM_BITS     7 
-#define MDL2416C_CHAR_POS_NUM_BITS 2 
+#define MDL2416C_CHAR_POS_NUM_BITS 2
 
 static inline void mdl2416c_program_init(PIO pio, uint sm1, uint sm2,
                                          uint offset1, uint offset2,
@@ -64,7 +64,7 @@ static inline void mdl2416c_program_init(PIO pio, uint sm1, uint sm2,
     
     pio_sm_config c;
 
-    c = display_char_program_get_default_config(offset1);
+    c = mdl2416c_display_char_program_get_default_config(offset1);
     sm_config_set_out_shift(&c, false, true, 32);
     sm_config_set_out_pins(&c, char_pin_base, MDL2416C_CHAR_NUM_BITS);
     // sm_config_set_set_pins(&c, char_pos_pin_base, MDL2416C_CHAR_POS_NUM_BITS);
@@ -75,7 +75,7 @@ static inline void mdl2416c_program_init(PIO pio, uint sm1, uint sm2,
     pio_sm_init(pio, sm1, offset1, &c);
 
 
-    c = set_char_pos_program_get_default_config(offset2);
+    c = mdl2416c_set_char_pos_program_get_default_config(offset2);
     sm_config_set_out_shift(&c, false, true, 32);
     sm_config_set_out_pins(&c, char_pos_pin_base, MDL2416C_CHAR_POS_NUM_BITS);
 
