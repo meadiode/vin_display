@@ -149,23 +149,20 @@ static inline void hdsp2112_program_init(PIO pio, uint data_pins_base,
     sm_config_set_out_shift(&c, false, true, 8);
     sm_config_set_out_pins(&c, data_pins_base, HDSP2112_DATA_PINS_NUM);
     sm_config_set_sideset_pins(&c, write_pin);
-    sm_config_set_clkdiv(&c, 100.0);
+    sm_config_set_clkdiv(&c, 4.0);
     pio_sm_init(pio, HDSP2112_PIO_DISPLAY_CHAR_SM, offs0, &c);
     uint offs1 = pio_add_program(pio, &set_char_pos_program);
     c = set_char_pos_program_get_default_config(offs1);
     sm_config_set_out_shift(&c, false, false, 32);
     sm_config_set_out_pins(&c, addr_pins_base, HDSP2112_ADDR_PINS_NUM);
-    sm_config_set_clkdiv(&c, 100.0);
+    sm_config_set_clkdiv(&c, 4.0);
     pio_sm_init(pio, HDSP2112_PIO_SET_CHAR_POS_SM, offs1, &c);
     uint offs2 = pio_add_program(pio, &select_display_program);
     c = select_display_program_get_default_config(offs2);
     sm_config_set_out_shift(&c, false, true, 32);
     sm_config_set_out_pins(&c, ce_pins_base, HDSP2112_CE_PINS_NUM);
-    sm_config_set_clkdiv(&c, 100.0);
+    sm_config_set_clkdiv(&c, 4.0);
     pio_sm_init(pio, HDSP2112_PIO_SELECT_DISPLAY_SM, offs2, &c);
-    // pio_sm_set_enabled(pio, HDSP2112_PIO_DISPLAY_CHAR_SM, true);
-    // pio_sm_set_enabled(pio, HDSP2112_PIO_SET_CHAR_POS_SM, true);
-    // pio_sm_set_enabled(pio, HDSP2112_PIO_SELECT_DISPLAY_SM, true);
     pio_set_sm_mask_enabled(pio, 0x07, true);
 }
 

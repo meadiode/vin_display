@@ -74,7 +74,9 @@ static void fpanel_task(void *params)
     bool hdd_active = false;
     uint32_t pc_start_time = 0;
     uint32_t pc_uptime = 0;
-    uint8_t dbuf[16];
+    uint8_t dbuf[24];
+    uint8_t bpwr = 0, brst = 0;
+    bool user_msg = false;
 
     for (;;)
     {
@@ -86,34 +88,20 @@ static void fpanel_task(void *params)
 
             if (mjson_get_bool(buf, data_len, "$.btn_power_press", &res))
             {
-                // if (res)
-                // {
-                //     mdl2416c_print("BPWR");
-                // }
-                // else
-                // {
-                //     mdl2416c_print("");
-                // }
+                bpwr = res ? 1 : 0;
                 // gpio_put(POWER_BTN_GPIO, res);
             }
 
             if (mjson_get_bool(buf, data_len, "$.btn_reset_press", &res))
             {
-                // if (res)
-                // {
-                //     mdl2416c_print("BRST");
-                // }
-                // else
-                // {
-                //     mdl2416c_print("");
-                // }
+                brst = res ? 1 : 0;
                 // gpio_put(RESET_BTN_GPIO, res);
             }
 
-            // if (mjson_get_string(buf, data_len, "$.disp_str", dbuf, sizeof(dbuf)) != -1)
-            // {
-            //     mdl2416c_print(dbuf);
-            // }
+            if (mjson_get_string(buf, data_len, "$.disp_str", dbuf, sizeof(dbuf)) != -1)
+            {
+                user_msg = strnlen(dbuf, sizeof(dbuf)) ? true : false;
+            }
 
 
             data_len = xMessageBufferReceive(msg_buf, buf, sizeof(buf), 0);
@@ -164,6 +152,14 @@ static void fpanel_task(void *params)
                                  "pc_uptime", pc_uptime);
 
         websocket_send(buf, data_len, 10);
+
+        if (!user_msg)
+        {
+            snprintf(dbuf, sizeof(dbuf), "t:%0.2fC BPWR:%u BRST:%u",
+                     temp_c, bpwr, brst);
+        }
+
+        hdsp2112_print(dbuf);
     }
 }
 

@@ -41,7 +41,7 @@ neg_y:
     wait 1 irq 5      ; wait till character set position program is ready
     out null, 29      ; dump 29 MSBs
     out pins, 3       ; select display with the CE pins
-    irq clear 5       ; let it proceed writing character
+    irq clear 5       ; let it proceed writing characters
 .wrap
 
 
@@ -105,7 +105,7 @@ static inline void hdsp2112_program_init(PIO pio, uint data_pins_base,
     sm_config_set_out_shift(&c, false, true, 8);
     sm_config_set_out_pins(&c, data_pins_base, HDSP2112_DATA_PINS_NUM);
     sm_config_set_sideset_pins(&c, write_pin);
-    sm_config_set_clkdiv(&c, 100.0);
+    sm_config_set_clkdiv(&c, 4.0);
     pio_sm_init(pio, HDSP2112_PIO_DISPLAY_CHAR_SM, offs0, &c);
 
 
@@ -113,7 +113,7 @@ static inline void hdsp2112_program_init(PIO pio, uint data_pins_base,
     c = set_char_pos_program_get_default_config(offs1);
     sm_config_set_out_shift(&c, false, false, 32);
     sm_config_set_out_pins(&c, addr_pins_base, HDSP2112_ADDR_PINS_NUM);
-    sm_config_set_clkdiv(&c, 100.0);
+    sm_config_set_clkdiv(&c, 4.0);
     pio_sm_init(pio, HDSP2112_PIO_SET_CHAR_POS_SM, offs1, &c);
 
 
@@ -121,7 +121,7 @@ static inline void hdsp2112_program_init(PIO pio, uint data_pins_base,
     c = select_display_program_get_default_config(offs2);
     sm_config_set_out_shift(&c, false, true, 32);
     sm_config_set_out_pins(&c, ce_pins_base, HDSP2112_CE_PINS_NUM);
-    sm_config_set_clkdiv(&c, 100.0);
+    sm_config_set_clkdiv(&c, 4.0);
     pio_sm_init(pio, HDSP2112_PIO_SELECT_DISPLAY_SM, offs2, &c);
 
     pio_set_sm_mask_enabled(pio, 0x07, true);
