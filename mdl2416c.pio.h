@@ -8,109 +8,168 @@
 #include "hardware/pio.h"
 #endif
 
-// --------------------- //
-// mdl2416c_display_char //
-// --------------------- //
+// ------------ //
+// display_char //
+// ------------ //
 
-#define mdl2416c_display_char_wrap_target 0
-#define mdl2416c_display_char_wrap 4
+#define display_char_wrap_target 1
+#define display_char_wrap 4
 
-static const uint16_t mdl2416c_display_char_program_instructions[] = {
+static const uint16_t display_char_program_instructions[] = {
+    0xbf42, //  0: nop                    side 1 [15]
             //     .wrap_target
-    0x7061, //  0: out    null, 1         side 1     
-    0x7007, //  1: out    pins, 7         side 1     
-    0xd020, //  2: irq    wait 0          side 1     
+    0xd024, //  1: irq    wait 4          side 1     
+    0x7008, //  2: out    pins, 8         side 1     
     0xaa42, //  3: nop                    side 0 [10]
     0xba42, //  4: nop                    side 1 [10]
             //     .wrap
 };
 
 #if !PICO_NO_HARDWARE
-static const struct pio_program mdl2416c_display_char_program = {
-    .instructions = mdl2416c_display_char_program_instructions,
+static const struct pio_program display_char_program = {
+    .instructions = display_char_program_instructions,
     .length = 5,
     .origin = -1,
 };
 
-static inline pio_sm_config mdl2416c_display_char_program_get_default_config(uint offset) {
+static inline pio_sm_config display_char_program_get_default_config(uint offset) {
     pio_sm_config c = pio_get_default_sm_config();
-    sm_config_set_wrap(&c, offset + mdl2416c_display_char_wrap_target, offset + mdl2416c_display_char_wrap);
+    sm_config_set_wrap(&c, offset + display_char_wrap_target, offset + display_char_wrap);
     sm_config_set_sideset(&c, 1, false, false);
     return c;
 }
 #endif
 
-// --------------------- //
-// mdl2416c_set_char_pos //
-// --------------------- //
+// ------------ //
+// set_char_pos //
+// ------------ //
 
-#define mdl2416c_set_char_pos_wrap_target 0
-#define mdl2416c_set_char_pos_wrap 4
+#define set_char_pos_wrap_target 0
+#define set_char_pos_wrap 6
 
-static const uint16_t mdl2416c_set_char_pos_program_instructions[] = {
+static const uint16_t set_char_pos_program_instructions[] = {
             //     .wrap_target
-    0xe023, //  0: set    x, 3                       
-    0x20c0, //  1: wait   1 irq, 0                   
-    0xa001, //  2: mov    pins, x                    
-    0xc040, //  3: irq    clear 0                    
-    0x0041, //  4: jmp    x--, 1                     
+    0xc025, //  0: irq    wait 5                     
+    0xe023, //  1: set    x, 3                       
+    0x20c4, //  2: wait   1 irq, 4                   
+    0xa001, //  3: mov    pins, x                    
+    0xc044, //  4: irq    clear 4                    
+    0x0042, //  5: jmp    x--, 2                     
+    0xa742, //  6: nop                           [7] 
             //     .wrap
 };
 
 #if !PICO_NO_HARDWARE
-static const struct pio_program mdl2416c_set_char_pos_program = {
-    .instructions = mdl2416c_set_char_pos_program_instructions,
-    .length = 5,
+static const struct pio_program set_char_pos_program = {
+    .instructions = set_char_pos_program_instructions,
+    .length = 7,
     .origin = -1,
 };
 
-static inline pio_sm_config mdl2416c_set_char_pos_program_get_default_config(uint offset) {
+static inline pio_sm_config set_char_pos_program_get_default_config(uint offset) {
     pio_sm_config c = pio_get_default_sm_config();
-    sm_config_set_wrap(&c, offset + mdl2416c_set_char_pos_wrap_target, offset + mdl2416c_set_char_pos_wrap);
+    sm_config_set_wrap(&c, offset + set_char_pos_wrap_target, offset + set_char_pos_wrap);
+    return c;
+}
+#endif
+
+// -------------- //
+// select_display //
+// -------------- //
+
+#define select_display_wrap_target 0
+#define select_display_wrap 9
+
+static const uint16_t select_display_program_instructions[] = {
+            //     .wrap_target
+    0x20c5, //  0: wait   1 irq, 5                   
+    0x6025, //  1: out    x, 5                       
+    0xe055, //  2: set    y, 21                      
+    0x00a7, //  3: jmp    x != y, 7                  
+    0xe000, //  4: set    pins, 0                    
+    0x7e0b, //  5: out    pins, 11               [30]
+    0x0009, //  6: jmp    9                          
+    0x600b, //  7: out    pins, 11                   
+    0xfe01, //  8: set    pins, 1                [30]
+    0xc045, //  9: irq    clear 5                    
+            //     .wrap
+};
+
+#if !PICO_NO_HARDWARE
+static const struct pio_program select_display_program = {
+    .instructions = select_display_program_instructions,
+    .length = 10,
+    .origin = -1,
+};
+
+static inline pio_sm_config select_display_program_get_default_config(uint offset) {
+    pio_sm_config c = pio_get_default_sm_config();
+    sm_config_set_wrap(&c, offset + select_display_wrap_target, offset + select_display_wrap);
     return c;
 }
 
 #include "hardware/clocks.h"
-#define MDL2416C_CHAR_NUM_BITS     7 
-#define MDL2416C_CHAR_POS_NUM_BITS 2
-static inline void mdl2416c_program_init(PIO pio, uint sm1, uint sm2,
-                                         uint offset1, uint offset2,
-                                         uint char_pin_base,
-                                         uint char_pos_pin_base,
+#define MDL2416C_DATA_PINS_NUM  7 
+#define MDL2416C_ADDR_PINS_NUM  2
+#define MDL2416C_PIO_DISPLAY_CHAR_SM   0
+#define MDL2416C_PIO_SET_CHAR_POS_SM   1
+#define MDL2416C_PIO_SELECT_DISPLAY_SM 2
+static inline void mdl2416c_program_init(PIO pio, uint data_pins_base,
+                                         uint addr_pins_base,
+                                         uint ce_pins_base, uint ce_pins_num,
                                          uint write_pin)
 {
     uint8_t i;
-    for (i = 0; i < MDL2416C_CHAR_NUM_BITS; i++)
+    for (i = 0; i < MDL2416C_DATA_PINS_NUM; i++)
     {
-        pio_gpio_init(pio, char_pin_base + i);
+        pio_gpio_init(pio, data_pins_base + i);
     }
-    for (i = 0; i < MDL2416C_CHAR_POS_NUM_BITS; i++)
+    for (i = 0; i < MDL2416C_ADDR_PINS_NUM; i++)
     {
-        pio_gpio_init(pio, char_pos_pin_base + i);
+        pio_gpio_init(pio, addr_pins_base + i);
+    }
+    for (i = 0; i < ce_pins_num; i++)
+    {
+        pio_gpio_init(pio, ce_pins_base + i);
     }
     pio_gpio_init(pio, write_pin);
-    pio_sm_set_consecutive_pindirs(pio, sm1, char_pin_base,
-                                   MDL2416C_CHAR_NUM_BITS, true);
-    pio_sm_set_consecutive_pindirs(pio, sm1, write_pin, 1, true);
-    pio_sm_set_consecutive_pindirs(pio, sm2, char_pos_pin_base,
-                                   MDL2416C_CHAR_POS_NUM_BITS, true);
+    pio_gpio_init(pio, 26);
+    pio_sm_set_consecutive_pindirs(pio, MDL2416C_PIO_DISPLAY_CHAR_SM,
+                                   data_pins_base, MDL2416C_DATA_PINS_NUM,
+                                   true);
+    pio_sm_set_consecutive_pindirs(pio, MDL2416C_PIO_DISPLAY_CHAR_SM,
+                                   write_pin, 1, true);
+    pio_sm_set_consecutive_pindirs(pio, MDL2416C_PIO_SET_CHAR_POS_SM,
+                                   addr_pins_base, MDL2416C_ADDR_PINS_NUM,
+                                   true);
+    pio_sm_set_consecutive_pindirs(pio, MDL2416C_PIO_SELECT_DISPLAY_SM,
+                                   ce_pins_base, ce_pins_num,
+                                   true);
+    pio_sm_set_consecutive_pindirs(pio, MDL2416C_PIO_DISPLAY_CHAR_SM,
+                                   26, 1, true);
     pio_sm_config c;
-    c = mdl2416c_display_char_program_get_default_config(offset1);
-    sm_config_set_out_shift(&c, false, true, 32);
-    sm_config_set_out_pins(&c, char_pin_base, MDL2416C_CHAR_NUM_BITS);
-    // sm_config_set_set_pins(&c, char_pos_pin_base, MDL2416C_CHAR_POS_NUM_BITS);
+    uint offs0 = pio_add_program(pio, &display_char_program);
+    c = display_char_program_get_default_config(offs0);
+    sm_config_set_out_shift(&c, false, true, 8);
+    sm_config_set_out_pins(&c, data_pins_base, MDL2416C_DATA_PINS_NUM);
     sm_config_set_sideset_pins(&c, write_pin);
-    // sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
-    sm_config_set_clkdiv(&c, 5.0);
-    pio_sm_init(pio, sm1, offset1, &c);
-    c = mdl2416c_set_char_pos_program_get_default_config(offset2);
+    sm_config_set_clkdiv(&c, 1000.0);
+    pio_sm_init(pio, MDL2416C_PIO_DISPLAY_CHAR_SM, offs0, &c);
+    uint offs1 = pio_add_program(pio, &set_char_pos_program);
+    c = set_char_pos_program_get_default_config(offs1);
+    sm_config_set_out_shift(&c, false, false, 32);
+    sm_config_set_out_pins(&c, addr_pins_base, MDL2416C_ADDR_PINS_NUM);
+    sm_config_set_clkdiv(&c, 1000.0);
+    pio_sm_init(pio, MDL2416C_PIO_SET_CHAR_POS_SM, offs1, &c);
+    uint offs2 = pio_add_program(pio, &select_display_program);
+    c = select_display_program_get_default_config(offs2);
     sm_config_set_out_shift(&c, false, true, 32);
-    sm_config_set_out_pins(&c, char_pos_pin_base, MDL2416C_CHAR_POS_NUM_BITS);
-    // sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
-    sm_config_set_clkdiv(&c, 5.0);
-    pio_sm_init(pio, sm2, offset2, &c);
-    pio_sm_set_enabled(pio, sm1, true);
-    pio_sm_set_enabled(pio, sm2, true);
+    sm_config_set_out_pins(&c, ce_pins_base, ce_pins_num);
+    sm_config_set_clkdiv(&c, 1000.0);
+    sm_config_set_set_pins(&c, 26, 1);
+    pio_sm_init(pio, MDL2416C_PIO_SELECT_DISPLAY_SM, offs2, &c);
+    pio_sm_set_pins(pio, MDL2416C_PIO_SELECT_DISPLAY_SM, 0xffffffff);
+    pio_set_sm_mask_enabled(pio, 0x07, true);
 }
 
 #endif

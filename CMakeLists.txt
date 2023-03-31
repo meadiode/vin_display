@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.12)
 include(pico_sdk_import.cmake)
 include(FreeRTOS_Kernel_import.cmake)
 
-project(fpanel_remote C CXX ASM)
+project(display_demo C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -17,7 +17,7 @@ if (PICO_SDK_VERSION_STRING VERSION_LESS "1.3.0")
     message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
 endif()
 
-add_executable(fpanel_remote
+add_executable(display_demo
         main.c
         fsdata.c
         http_server.c
@@ -29,10 +29,10 @@ add_executable(fpanel_remote
         hdsp2112.c
         )
 
-pico_generate_pio_header(fpanel_remote ${CMAKE_CURRENT_LIST_DIR}/mdl2416c.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR})
-pico_generate_pio_header(fpanel_remote ${CMAKE_CURRENT_LIST_DIR}/hdsp2112.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR})
+pico_generate_pio_header(display_demo ${CMAKE_CURRENT_LIST_DIR}/mdl2416c.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR})
+pico_generate_pio_header(display_demo ${CMAKE_CURRENT_LIST_DIR}/hdsp2112.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR})
 
-target_compile_definitions(fpanel_remote PRIVATE
+target_compile_definitions(display_demo PRIVATE
         WIFI_SSID=\"${WIFI_SSID}\"
         WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
         NO_SYS=0            # don't want NO_SYS (generally this would be in your lwipopts.h)
@@ -41,12 +41,12 @@ target_compile_definitions(fpanel_remote PRIVATE
         PING_USE_SOCKETS=1
         )
 
-target_include_directories(fpanel_remote PRIVATE
+target_include_directories(display_demo PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${PICO_LWIP_CONTRIB_PATH}/apps/httpserver
         )
 
-target_link_libraries(fpanel_remote
+target_link_libraries(display_demo
         pico_cyw43_arch_lwip_sys_freertos
         pico_stdlib
         hardware_pio
@@ -56,4 +56,4 @@ target_link_libraries(fpanel_remote
         hardware_adc
         FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
         )
-pico_add_extra_outputs(fpanel_remote)
+pico_add_extra_outputs(display_demo)

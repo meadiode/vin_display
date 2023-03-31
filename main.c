@@ -10,7 +10,7 @@
 #include "http_server.h"
 #include "dhcp_server.h"
 #include "fpanel.h"
-#include "hdsp2112.h"
+#include "mdl2416c.h"
 
 
 #define SW_MAJOR_VERSION 0
@@ -98,7 +98,7 @@ void main_task(__unused void *params) {
 
     wifi_start_sta();
 
-    fpanel_init();
+    // fpanel_init();
 
     printf("Starting server at %s on port %u\n",
            ip4addr_ntoa(netif_ip4_addr(netif_list)), 80);
@@ -120,7 +120,7 @@ int main( void )
 
     adc_init();
 
-    hdsp2112_init();
+    mdl2416c_init();
 
     printf("Starting FreeRTOS SMP on both cores\n");
     

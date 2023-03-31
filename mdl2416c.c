@@ -1,20 +1,28 @@
 
 #include <string.h>
 #include <hardware/pio.h>
+#include <hardware/dma.h>
 
 #include "mdl2416c.h"
 #include "mdl2416c.pio.h"
 
 
-#define MDL_DATA_START_PIN     2
-#define MDL_CHAR_POS_START_PIN 16
+#define MDL_NUM_DISPLAYS       8
 
-#define MDL_BL_PIN    9
-#define MDL_WR_PIN   18
-#define MDL_CU_PIN   19
-#define MDL_CUE_PIN  20
-#define MDL_CLR_PIN  21
-#define MDL_CE_PIN   22
+#define MDL_DATA_START_PIN     2
+#define MDL_ADDR_START_PIN     9
+#define MDL_CE_START_PIN       16
+#define MDL_CE8_PIN            26
+
+#define MDL_BL_PIN   15
+#define MDL_WR_PIN   14
+#define MDL_CU_PIN   13
+#define MDL_CUE_PIN  12
+#define MDL_CLR_PIN  11
+
+
+static uint8_t display_buf[4 * MDL_NUM_DISPLAYS] = {0};
+static int32_t mdl_dma_chan = -1; 
 
 
 void mdl2416c_init(void)
@@ -23,81 +31,63 @@ void mdl2416c_init(void)
     gpio_init(MDL_CU_PIN);
     gpio_init(MDL_CUE_PIN);
     gpio_init(MDL_CLR_PIN);
-    gpio_init(MDL_CE_PIN);
 
     gpio_set_dir(MDL_BL_PIN, GPIO_OUT);
     gpio_set_dir(MDL_CU_PIN, GPIO_OUT);
     gpio_set_dir(MDL_CUE_PIN, GPIO_OUT);
     gpio_set_dir(MDL_CLR_PIN, GPIO_OUT);
-    gpio_set_dir(MDL_CE_PIN, GPIO_OUT);
 
     gpio_put(MDL_CU_PIN, 1);
     gpio_put(MDL_CUE_PIN, 0);
     gpio_put(MDL_CLR_PIN, 1);
     gpio_put(MDL_BL_PIN, 1);
 
-    gpio_put(MDL_CE_PIN, 0);
-
-    PIO pio = pio0;
-    uint offset1 = pio_add_program(pio, &mdl2416c_display_char_program);
-    uint offset2 = pio_add_program(pio, &mdl2416c_set_char_pos_program);
-
-    mdl2416c_program_init(pio, 0, 1, offset1, offset2,
-                          MDL_DATA_START_PIN,
-                          MDL_CHAR_POS_START_PIN,
-                          MDL_WR_PIN);
+    gpio_put(MDL_CLR_PIN, 0);
+    sleep_ms(500);
+    gpio_put(MDL_CLR_PIN, 1);
 
 
-    // const char *words[] = {"COAX", "PINT", "PUNK", "SOCK", "PEAK",
-    //                        "WELD", "LUSH", "FIZZ", "CLIP", "CLAM",
-    //                        "GLUM", "GUSH", "CURL", "COZY", "YOGA",
-    //                        "ROIL", "WISP", "MATH", "NOSH", "NOOK",
-    //                        "GLOB", "HUFF", "PUFF", "ZEST", "WARY",
-    //                        "DRIP", "DUNK", "JAZZ", "JIVE", "CORK",
-    //                        "RASP", "RAZE", "QUID", "QUIT", "LYNX",
-    //                        "LUCK", "BOLT", "HYPE", "HOAX", "WHAM"};
+    mdl2416c_program_init(pio0, MDL_DATA_START_PIN, MDL_ADDR_START_PIN,
+                          MDL_CE_START_PIN, 7, MDL_WR_PIN);
 
-    // for (uint32_t i = 0; i < 10000; i++)
-    // {
-    //     for (uint32_t j = 0; j < sizeof(words) / sizeof(uint8_t*); j++)
-    //     {
-    //         const uint8_t *w = words[j];
+    mdl_dma_chan = dma_claim_unused_channel(true);
+    dma_channel_config c = dma_channel_get_default_config(mdl_dma_chan);
+    channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
+    channel_config_set_read_increment(&c, true);
+    channel_config_set_dreq(&c, DREQ_PIO0_TX0);
 
-    //         pio_sm_put_blocking(pio, 0, 0);
-    //         sleep_ms(500);
+    dma_channel_configure(
+        mdl_dma_chan,
+        &c,
+        &pio0_hw->txf[MDL2416C_PIO_DISPLAY_CHAR_SM], /* Write address */
+        display_buf,                                 /* Read address */
+        sizeof(display_buf),
+        false                                        /* Don't start yet */
+    );
 
-    //         pio_sm_put_blocking(pio, 0, w[0] << 24 | w[1] << 16 | w[2] << 8 | w[3]);
-    //         sleep_ms(500);            
-    //     }
-    // }
+    mdl2416c_print("t:238.9 h:98.7  Printing... 78% ");
 }
 
 
 void mdl2416c_print(const uint8_t *str)
 {
-    uint8_t buf[4];
-    uint8_t pos = 0;
-    size_t len = strnlen(str, 40);
-    uint32_t i;
+    memset(display_buf, ' ', sizeof(display_buf));
+    memcpy(display_buf, str, strnlen(str, sizeof(display_buf)));
 
-/* TODO: Multiple consequent displays */
-
-    for (i = 0; i == 0 || i < len; i += 4)
+    for (uint16_t i = 0; i < sizeof(display_buf); i++)
     {
-        uint8_t nchars = MIN(sizeof(buf), len - i);
-        memset(buf, 0, sizeof(buf));
-        memcpy(buf, str + i, nchars);
-
-        for (uint8_t j = 0; j < sizeof(buf); j++)
+        uint8_t c = display_buf[i];
+        
+        if (c >= 'a' && c <= 'z')
         {
-            uint8_t c = buf[j];
-            if (c >= 'a' && c <= 'z')
-            {
-                buf[j] = c - ('a' - 'A');
-            }
+            display_buf[i] = c - ('a' - 'A');
         }
-
-        pio_sm_put(pio0, 0, buf[0] << 24 | buf[1] << 16 | buf[2] << 8 | buf[3]);
     }
-}
 
+    pio_sm_put(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM, (0b1111111111111110 << 16) | (0b1111111111111101));
+    pio_sm_put(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM, (0b1111111111111011 << 16) | (0b1111111111110111));
+    pio_sm_put(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM, (0b1111111111101111 << 16) | (0b1111111111011111));
+    pio_sm_put(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM, (0b1111111110111111 << 16) | (0b1010111111111111));
+
+    dma_channel_set_read_addr(mdl_dma_chan, display_buf, true);
+}
