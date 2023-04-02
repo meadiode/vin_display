@@ -8,7 +8,7 @@
 
 #include "websocket.h"
 #include "http_server.h"
-#include "fpanel.h"
+#include "display.h"
 
 #define WS_MAGIC_STRING "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 #define BASE64_ALPHABET "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
@@ -299,7 +299,7 @@ static bool dispatch_ws_message(struct netconn *conn, const ws_header_t *hdr,
             }
             WS_LOG(4, "\n");
         
-            fpanel_send(buf, hdr->payload_len, 100);
+            display_send(buf, hdr->payload_len, 100);
         }
         break;
 

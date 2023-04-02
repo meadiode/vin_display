@@ -2,6 +2,7 @@
 #include <string.h>
 #include <hardware/pio.h>
 #include <hardware/dma.h>
+#include <pico/time.h>
 
 #include "mdl2416c.h"
 #include "mdl2416c.pio.h"
@@ -65,12 +66,18 @@ void mdl2416c_init(void)
         false                                        /* Don't start yet */
     );
 
-    mdl2416c_print("t:238.9 h:98.7  Printing... 78% ");
+    // for (;;)
+    // {
+    //     mdl2416c_print("0123456789abcdefghijklmnopqrstuv");
+    //     sleep_ms(10);
+    // }
 }
 
 
 void mdl2416c_print(const uint8_t *str)
 {
+    dma_channel_wait_for_finish_blocking(mdl_dma_chan);
+
     memset(display_buf, ' ', sizeof(display_buf));
     memcpy(display_buf, str, strnlen(str, sizeof(display_buf)));
 
@@ -84,10 +91,22 @@ void mdl2416c_print(const uint8_t *str)
         }
     }
 
-    pio_sm_put(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM, (0b1111111111111110 << 16) | (0b1111111111111101));
-    pio_sm_put(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM, (0b1111111111111011 << 16) | (0b1111111111110111));
-    pio_sm_put(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM, (0b1111111111101111 << 16) | (0b1111111111011111));
-    pio_sm_put(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM, (0b1111111110111111 << 16) | (0b1010111111111111));
+    pio_sm_put_blocking(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM,
+                        0xffff0000 | 0b1111111111111110);    
+    pio_sm_put_blocking(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM,
+                        0xffff0000 | 0b1111111111111101);
+    pio_sm_put_blocking(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM,
+                        0xffff0000 | 0b1111111111111011);
+    pio_sm_put_blocking(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM,
+                        0xffff0000 | 0b1111111111110111);
+    pio_sm_put_blocking(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM,
+                        0xffff0000 | 0b1111111111101111);
+    pio_sm_put_blocking(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM,
+                        0xffff0000 | 0b1111111111011111);
+    pio_sm_put_blocking(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM,
+                        0xffff0000 | 0b1111111110111111);
+    pio_sm_put_blocking(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM,
+                        0xffff0000 | 0b1010111111111111);
 
     dma_channel_set_read_addr(mdl_dma_chan, display_buf, true);
 }

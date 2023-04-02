@@ -1,10 +1,6 @@
-# PC F-panel remote
+# Vintage display module
 
-A pico_w based device to remotely control a PC front panel (f-panel) through a web-interface.
-
-## Status
-
-Initial stage of development/non-functional
+An RP240 based display module using vintage dot-matrix, or 16-segment vintage display ICs.
 
 
 ## Building
@@ -51,7 +47,7 @@ It should start a GDB server on the default port 3333.
 To flash and run/debug the firmware navigate to the project's directory and run the following: 
 ```
 cd build
-gdb-multiarch ./fpanel_remote.elf
+gdb-multiarch ./display_demo.elf
 ```
 Once GDB started:
 ```

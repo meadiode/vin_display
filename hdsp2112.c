@@ -3,6 +3,7 @@
 #include <hardware/gpio.h>
 #include <hardware/pio.h>
 #include <hardware/dma.h>
+#include <pico/time.h>
 
 #include "hdsp2112.h"
 #include "hdsp2112.pio.h"

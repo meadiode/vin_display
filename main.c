@@ -4,12 +4,14 @@
 #include <lwip/ip4_addr.h>
 #include <hardware/timer.h>
 #include <hardware/adc.h>
+#include <hardware/rtc.h>
 #include <FreeRTOS.h>
 #include <task.h>
 
 #include "http_server.h"
 #include "dhcp_server.h"
-#include "fpanel.h"
+#include "display.h"
+#include "timesync.h"
 #include "mdl2416c.h"
 
 
@@ -98,7 +100,9 @@ void main_task(__unused void *params) {
 
     wifi_start_sta();
 
-    // fpanel_init();
+    timesync_init();
+
+    display_init();
 
     printf("Starting server at %s on port %u\n",
            ip4addr_ntoa(netif_ip4_addr(netif_list)), 80);
@@ -119,6 +123,8 @@ int main( void )
     stdio_init_all();
 
     adc_init();
+
+    rtc_init();
 
     mdl2416c_init();
 

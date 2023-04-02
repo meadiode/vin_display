@@ -23,7 +23,8 @@ add_executable(display_demo
         http_server.c
         websocket.c
         dhcp_server.c
-        fpanel.c
+        display.c
+        timesync.c
         mjson.c
         mdl2416c.c
         hdsp2112.c
@@ -50,6 +51,7 @@ target_link_libraries(display_demo
         pico_cyw43_arch_lwip_sys_freertos
         pico_stdlib
         hardware_pio
+        hardware_rtc
         pico_lwip_iperf
         pico_lwip_ppp
         pico_rand

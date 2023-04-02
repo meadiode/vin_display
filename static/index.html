@@ -1,89 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>F-panel remote</title>
-
-<link rel="stylesheet" href="style.css">
-<script src="/main.js" type="text/javascript"></script>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDL2416C Demo</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
-<div id="main_frame" >
-
-    <div class="tab">
-        <button class="tablinks" id="default_tab" onclick="switch_tab(event, 'f_panel_tab')">F-Panel</button>
-        <button class="tablinks" onclick="switch_tab(event, 'settings_tab')">Settings</button>
+    <div class="input-container">
+        <input type="text" class="mdl-input" maxlength="16">
+        <input type="text" class="mdl-input" maxlength="16">
     </div>
-
-
-    <div id="f_panel_tab" class="tabcontent"> 
-        <button class="f_panel_button" id="btn_power">
-        </button>
-
-        <button class="f_panel_button" id="btn_reset">
-        </button>
-
-        <div id="leds">
-            <div class="tagged_led">
-                <div class="led_tag">PWR</div>
-                <div class="led" id="led_power"></div>                
-            </div>
-
-            <div class="tagged_led">
-                <div class="led_tag">HDD</div>
-                <div class="led" id="led_hdd"></div>
-            </div>
-        </div>
-
-        <div id="pc_info">
-            <div class="info_str">
-                <pre id="info_uptime">Uptime: 00d 00:00:00</pre>
-            </div>
-            <div class="info_str">
-                <pre id="info_temp">Temperature:   00.0C</pre>
-            </div>
-        </div>
-    </div>
-
-    <div id="settings_tab" class="tabcontent"> 
-        
-        <div action="">
-            <label for="pc_name">Computer name</label>
-            <input type="text" id="pc_name" name="pc_name" placeholder="My PC">
-
-            <label for="ssid">Connect to Wi-Fi</label>
-            <input type="text" id="ssid" name="ssid" placeholder="Wi-Fi name (SSID)">
-
-            <label for="auth_method">Authorization type</label>
-            <select id="auth_method" name="auth_method">
-                <option value="open">Open</option>
-                <option value="wpa">WPA</option>
-                <option value="wpa2">WPA2</option>
-                <option value="mixed">WPA2/WPA</option>
-            </select>
-
-            <input type="submit" value="Save">
-        </div>    
-    </div>
-
-    <div id="offline_overlay">
-        <div id="offline_overlay_background"></div>
-        <div id="offline_overlay_contents">
-            <div>Device disconnected ...</div>
-            <button id="btn_connect">Connect</button>
-        </div>
-    </div>
-
-</div>
-
-<script type="text/javascript">
-    (function() { 
-        init();
-    })();
-</script>
-
+    <script src="main.js"></script>
 </body>
-
 </html>
