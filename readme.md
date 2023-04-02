@@ -1,10 +1,10 @@
 # Vintage display module
 
-An RP240 based display module using vintage dot-matrix, or 16-segment vintage display ICs.
+An RP2040 based display module using vintage dot-matrix, or 16-segment vintage display ICs.
 The end goal is to develop it into a display for 3d-printers and/or CNC machines.
 
 
-## DemoBoard v1
+## DemoBoard 1
 Simplistic demo-board to evaluate MDL2416C(16-segment LED display), 8 of them are driven by a pico_w. The board just displays current time and date and also prints custom message through a web-interface.
 ![DemoBoard1](images/demoboard1.jpg)
 
