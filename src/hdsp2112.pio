@@ -1,0 +1,131 @@
+
+; TODO: Make it adjustable for arbitrary number of displays, currently it works with 3
+
+.define TW  10
+.define TDH 10
+
+.program display_char
+.side_set 1
+    nop side 1 [15]    ; set the WR pin high initially
+
+.wrap_target
+    irq wait 4 side 1  ; wait address setup
+    out null, 1 side 1 ; discard MSB
+    out pins, 7 side 1 ; output a character
+    nop side 0 [TW]    ; pull WR low and then high to trigger write
+    nop side 1 [TDH]
+.wrap
+
+
+.program set_char_pos
+.wrap_target
+    irq wait 5         ; wait display select
+    set x, 0           ; X is containing character index
+next_char:
+    wait 1 irq 4       ; wait till character is ready to be written
+    mov pins, x        ; configure the pins for the current character position
+    irq clear 4        ; let character to be written
+
+    mov y, ~x          ; increment X through negation and decrement and negation again
+    jmp y--, neg_y
+neg_y:
+    mov x, ~y
+    set y, 8           ; check if X reached 8, if yes then wrap the program
+    jmp x != y, next_char
+    nop [10]
+.wrap
+
+
+.program select_display
+.wrap_target
+    wait 1 irq 5      ; wait till character set position program is ready
+    out null, 29      ; dump 29 MSBs
+    out pins, 3       ; select display with the CE pins
+    irq clear 5       ; let it proceed writing characters
+.wrap
+
+
+
+% c-sdk {
+
+#include "hardware/clocks.h"
+
+#define HDSP2112_DATA_PINS_NUM  7
+#define HDSP2112_ADDR_PINS_NUM  3
+#define HDSP2112_CE_PINS_NUM    3
+
+#define HDSP2112_PIO_DISPLAY_CHAR_SM   0
+#define HDSP2112_PIO_SET_CHAR_POS_SM   1
+#define HDSP2112_PIO_SELECT_DISPLAY_SM 2
+
+static inline void hdsp2112_program_init(PIO pio, uint data_pins_base,
+                                         uint addr_pins_base, uint ce_pins_base,
+                                         uint write_pin)
+{
+
+    uint8_t i;
+
+
+    for (i = 0; i < HDSP2112_DATA_PINS_NUM; i++)
+    {
+        pio_gpio_init(pio, data_pins_base + i);
+    }
+
+    for (i = 0; i < HDSP2112_ADDR_PINS_NUM; i++)
+    {
+        pio_gpio_init(pio, addr_pins_base + i);
+    }
+
+    for (i = 0; i < HDSP2112_CE_PINS_NUM; i++)
+    {
+        pio_gpio_init(pio, ce_pins_base + i);
+    }
+
+    pio_gpio_init(pio, write_pin);
+
+    pio_sm_set_consecutive_pindirs(pio, HDSP2112_PIO_DISPLAY_CHAR_SM,
+                                   data_pins_base, HDSP2112_DATA_PINS_NUM,
+                                   true);
+    pio_sm_set_consecutive_pindirs(pio, HDSP2112_PIO_DISPLAY_CHAR_SM,
+                                   write_pin, 1, true);
+
+    pio_sm_set_consecutive_pindirs(pio, HDSP2112_PIO_SET_CHAR_POS_SM,
+                                   addr_pins_base, HDSP2112_ADDR_PINS_NUM,
+                                   true);
+
+    pio_sm_set_consecutive_pindirs(pio, HDSP2112_PIO_SELECT_DISPLAY_SM,
+                                   ce_pins_base, HDSP2112_CE_PINS_NUM,
+                                   true);
+
+
+    pio_sm_config c;
+    
+    uint offs0 = pio_add_program(pio, &display_char_program);
+    c = display_char_program_get_default_config(offs0);
+    sm_config_set_out_shift(&c, false, true, 8);
+    sm_config_set_out_pins(&c, data_pins_base, HDSP2112_DATA_PINS_NUM);
+    sm_config_set_sideset_pins(&c, write_pin);
+    sm_config_set_clkdiv(&c, 4.0);
+    pio_sm_init(pio, HDSP2112_PIO_DISPLAY_CHAR_SM, offs0, &c);
+
+
+    uint offs1 = pio_add_program(pio, &set_char_pos_program);
+    c = set_char_pos_program_get_default_config(offs1);
+    sm_config_set_out_shift(&c, false, false, 32);
+    sm_config_set_out_pins(&c, addr_pins_base, HDSP2112_ADDR_PINS_NUM);
+    sm_config_set_clkdiv(&c, 4.0);
+    pio_sm_init(pio, HDSP2112_PIO_SET_CHAR_POS_SM, offs1, &c);
+
+
+    uint offs2 = pio_add_program(pio, &select_display_program);
+    c = select_display_program_get_default_config(offs2);
+    sm_config_set_out_shift(&c, false, true, 32);
+    sm_config_set_out_pins(&c, ce_pins_base, HDSP2112_CE_PINS_NUM);
+    sm_config_set_clkdiv(&c, 4.0);
+    pio_sm_init(pio, HDSP2112_PIO_SELECT_DISPLAY_SM, offs2, &c);
+
+    pio_set_sm_mask_enabled(pio, 0x07, true);
+}
+
+%}
+

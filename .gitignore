@@ -1,5 +1,5 @@
 
-build/*
+src/build/*
 *.sublime-*
 *.pyd
 *gerbers/*
