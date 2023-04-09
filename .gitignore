@@ -6,4 +6,5 @@ src/build/*
 hardware/*/gerbers
 hardware/*/*-cache
 hardware/*/*-backups
+hardware/*/#auto_saved_files#
 *.kicad*-bak

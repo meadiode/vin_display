@@ -19,8 +19,8 @@ static const uint8_t *MONTHS[12] = {"Jan", "Feb", "Mar", "Apr",
                                     "May", "Jun", "Jul", "Aug",
                                     "Sep", "Oct", "Nov", "Dec"};
 
-static const uint8_t *DAYS[7] = {"Mon", "Tue", "Wed", "Thu",
-                                 "Fri", "Sat", "Sun"};
+static const uint8_t *DAYS[7] = {"Sun", "Mon", "Tue", "Wed",
+                                 "Thu", "Fri", "Sat"};
 
 static TaskHandle_t display_task_handle = NULL;
 static MessageBufferHandle_t msg_buf;
