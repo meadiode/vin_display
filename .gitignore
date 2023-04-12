@@ -7,4 +7,5 @@ hardware/*/gerbers
 hardware/*/*-cache
 hardware/*/*-backups
 hardware/*/#auto_saved_files#
+hardware/*/_autosave*
 *.kicad*-bak
