@@ -28,10 +28,12 @@ add_executable(display_demo
         mjson.c
         mdl2416c.c
         hdsp2112.c
+        hdsp2000.c
         )
 
 pico_generate_pio_header(display_demo ${CMAKE_CURRENT_LIST_DIR}/mdl2416c.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR})
 pico_generate_pio_header(display_demo ${CMAKE_CURRENT_LIST_DIR}/hdsp2112.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR})
+pico_generate_pio_header(display_demo ${CMAKE_CURRENT_LIST_DIR}/hdsp2000.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 target_compile_definitions(display_demo PRIVATE
         WIFI_SSID=\"${WIFI_SSID}\"

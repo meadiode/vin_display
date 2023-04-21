@@ -1,0 +1,124 @@
+
+.program push_data
+.side_set 1
+
+.wrap_target
+    set x, (7 - 1) side 0     ; x - dot counter in each column
+    out pins, 1    side 0     ; purge 1 MSB
+
+    irq wait 7     side 0     ; inform the counting program that the data for one column 
+                              ; of the current character is about to be pushed
+loop:
+    out pins, 1    side 1     ; set the data pin and pull the clock pin
+    jmp x--, loop  side 0     ; next dot in a column
+
+.wrap
+
+
+.program count_characters
+
+.wrap_target
+    set x, (12 - 1)           ; x - display counter
+    set y, (4 - 1)            ; y - character counter in each display
+    set pins, 0               ; reset all column pins
+
+loop:                         ; double loop to iterate over all characters in the display set
+    wait 1 irq 7              ; let the column data of the current character to be pushed
+    jmp y--, loop            
+    set y, (4 - 1)
+    jmp x--, loop
+    irq wait 5                ; let the next column pin to be activated, after the loop finishes
+    wait 1 irq 6              ; wait till the current column finishes firing
+.wrap
+
+
+.program fire_column
+
+.wrap_target
+    wait 1 irq 5              ; wait till the column data for all characters is pushed
+    set pins 1 [30]           ; activate the first column pin
+    irq wait 6                ; proceed with the data for the next column
+
+    wait 1 irq 5              ; do the same for the rest of the columns
+    set pins 2 [30]
+    irq wait 6
+
+    wait 1 irq 5
+    set pins 4 [30]
+    irq wait 6
+
+    wait 1 irq 5
+    set pins 8 [30]
+    irq wait 6
+
+    wait 1 irq 5
+    set pins 16 [30]
+    irq wait 6
+.wrap
+
+% c-sdk {
+
+#include "hardware/clocks.h"
+
+
+#define HDSP2000_PIO_PUSH_DATA_SM          0
+#define HDSP2000_PIO_COUNT_CHARACTERS_SM   1
+#define HDSP2000_PIO_FIRE_COLUMNS_SM       2
+
+
+static inline void hdsp2000_program_init(PIO pio, uint clock_pin,
+                                         uint data_pin, uint column_pins_base)
+{
+    uint8_t i;
+
+    pio_gpio_init(pio, clock_pin);
+    pio_gpio_init(pio, data_pin);
+
+    gpio_set_slew_rate(clock_pin, GPIO_SLEW_RATE_SLOW);
+ 
+    for (i = 0; i < 5; i++)
+    {
+        pio_gpio_init(pio, column_pins_base + i);
+    }
+
+    pio_sm_set_consecutive_pindirs(pio, HDSP2000_PIO_PUSH_DATA_SM,
+                                   clock_pin, 1, true);
+
+    pio_sm_set_consecutive_pindirs(pio, HDSP2000_PIO_PUSH_DATA_SM,
+                                   data_pin, 1, true);
+
+    pio_sm_set_consecutive_pindirs(pio, HDSP2000_PIO_COUNT_CHARACTERS_SM,
+                                   column_pins_base, 5, true);    
+
+    pio_sm_set_consecutive_pindirs(pio, HDSP2000_PIO_FIRE_COLUMNS_SM,
+                                   column_pins_base, 5, true);
+
+    pio_sm_config c;
+    
+    uint offs0 = pio_add_program(pio, &push_data_program);
+    c = push_data_program_get_default_config(offs0);
+    sm_config_set_out_shift(&c, false, true, 8);
+    sm_config_set_out_pins(&c, data_pin, 1);    
+    sm_config_set_sideset_pins(&c, clock_pin);
+    sm_config_set_clkdiv(&c, 125.0 / 2.0 / 3.0);
+    pio_sm_init(pio, HDSP2000_PIO_PUSH_DATA_SM, offs0, &c);
+
+    uint offs1 = pio_add_program(pio, &count_characters_program);
+    c = count_characters_program_get_default_config(offs1);
+    sm_config_set_set_pins(&c, column_pins_base, 5);
+    sm_config_set_out_shift(&c, false, true, 8);
+    sm_config_set_clkdiv(&c, 1.0);
+    pio_sm_init(pio, HDSP2000_PIO_COUNT_CHARACTERS_SM, offs1, &c);
+
+    uint offs2 = pio_add_program(pio, &fire_column_program);
+    c = fire_column_program_get_default_config(offs2);
+    sm_config_set_set_pins(&c, column_pins_base, 5);
+    sm_config_set_out_shift(&c, false, true, 8);
+    sm_config_set_clkdiv(&c, 8000.0);
+    pio_sm_init(pio, HDSP2000_PIO_FIRE_COLUMNS_SM, offs2, &c);
+
+    pio_set_sm_mask_enabled(pio, 0x07, true);
+}
+
+%}
+
