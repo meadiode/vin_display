@@ -1744,7 +1744,6 @@
     )
   )
 
-
   (junction (at 67.31 110.49) (diameter 0) (color 0 0 0 0)
     (uuid 0500f2c0-2e3b-4922-a9e6-fd9418c87377)
   )
@@ -4791,10 +4790,10 @@
   (symbol (lib_id "Connector_Generic:Conn_01x04") (at 68.58 137.16 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 83b99386-65f3-4d5f-ace0-dfc7848335c3)
-    (property "Reference" "J4" (at 71.12 137.1599 0)
+    (property "Reference" "J4" (at 71.12 137.795 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Value" "Conn_01x04" (at 71.12 139.6999 0)
+    (property "Value" "IF_UART" (at 71.12 140.335 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
     (property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical" (at 68.58 137.16 0)
