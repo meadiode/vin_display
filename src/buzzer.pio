@@ -1,0 +1,57 @@
+
+; Play a tone using 50% PWM cycles
+;
+; To play a tone, the out FIFO should contain 2 32-bit numbers:
+;    1 - total number of PWM cycles
+;    2 - length of the duty/off period of a single PWM cycle 
+
+.program buzzer
+.side_set 1
+
+.wrap_target
+    out x, 32               side 0 ; X contains total number of cycles
+    out isr, 32             side 0 ; ISR is used to store duty cycle length 
+                                   ; of a PWM cycle, measured in nanoseconds 
+
+
+duration_loop:                     ; loop through cycles
+    mov y, isr              side 0 ; Y is the duty cycle counter
+
+duty_loop_h:
+    jmp y--, duty_loop_h    side 1
+
+    mov y, isr              side 0 ; renew Y to count off-part of a PWM cycle
+
+duty_loop_l:  
+    jmp y--, duty_loop_l    side 0
+
+    jmp x--, duration_loop  side 0
+
+.wrap
+
+% c-sdk {
+
+#include "hardware/clocks.h"
+
+#define BUZZER_PIO_SM 3
+
+static inline void mdl2416c_program_init(PIO pio, uint buzzer_pin)
+{
+    pio_gpio_init(pio, buzzer_pin);
+
+    pio_sm_set_consecutive_pindirs(pio, BUZZER_PIO_SM, buzzer_pin, 1, true);
+    
+    pio_sm_config c;
+
+    uint offs0 = pio_add_program(pio, &buzzer_program);
+    c = buzzer_program_get_default_config(offs0);
+    sm_config_set_out_shift(&c, false, true, 32);
+    sm_config_set_in_shift(&c, false, false, 32);
+    sm_config_set_sideset_pins(&c, buzzer_pin);
+    sm_config_set_clkdiv(&c, 125.0);
+    pio_sm_init(pio, BUZZER_PIO_SM, offs0, &c);
+
+    pio_sm_set_enabled(pio, BUZZER_PIO_SM, true);
+}
+
+%}

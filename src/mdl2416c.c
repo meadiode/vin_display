@@ -8,18 +8,17 @@
 #include "mdl2416c.pio.h"
 
 
-#define MDL_NUM_DISPLAYS       8
+#define MDL_NUM_DISPLAYS       10
 
-#define MDL_DATA_START_PIN     2
-#define MDL_ADDR_START_PIN     9
-#define MDL_CE_START_PIN       16
-#define MDL_CE8_PIN            26
+#define MDL_DATA_START_PIN     6
+#define MDL_ADDR_START_PIN     13
+#define MDL_CE_START_PIN       20
 
-#define MDL_BL_PIN   15
-#define MDL_WR_PIN   14
-#define MDL_CU_PIN   13
-#define MDL_CUE_PIN  12
-#define MDL_CLR_PIN  11
+#define MDL_BL_PIN   19
+#define MDL_WR_PIN   18
+#define MDL_CU_PIN   3
+#define MDL_CUE_PIN  2
+#define MDL_CLR_PIN  15
 
 
 static uint8_t display_buf[4 * MDL_NUM_DISPLAYS] = {0};
@@ -49,7 +48,7 @@ void mdl2416c_init(void)
 
 
     mdl2416c_program_init(pio0, MDL_DATA_START_PIN, MDL_ADDR_START_PIN,
-                          MDL_CE_START_PIN, 7, MDL_WR_PIN);
+                          MDL_CE_START_PIN, 4, MDL_WR_PIN);
 
     mdl_dma_chan = dma_claim_unused_channel(true);
     dma_channel_config c = dma_channel_get_default_config(mdl_dma_chan);
@@ -66,11 +65,11 @@ void mdl2416c_init(void)
         false                                        /* Don't start yet */
     );
 
-    // for (;;)
-    // {
-    //     mdl2416c_print("0123456789abcdefghijklmnopqrstuv");
-    //     sleep_ms(10);
-    // }
+    // mdl2416c_print("0123456789abcdefghijklmnopqrstuvwxyz+=-/");
+    mdl2416c_print("0000111122223333444455556666777788889999");
+    sleep_ms(500);
+    mdl2416c_print("                                        ");
+
 }
 
 
@@ -90,23 +89,6 @@ void mdl2416c_print(const uint8_t *str)
             display_buf[i] = c - ('a' - 'A');
         }
     }
-
-    pio_sm_put_blocking(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM,
-                        0xffff0000 | 0b1111111111111110);    
-    pio_sm_put_blocking(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM,
-                        0xffff0000 | 0b1111111111111101);
-    pio_sm_put_blocking(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM,
-                        0xffff0000 | 0b1111111111111011);
-    pio_sm_put_blocking(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM,
-                        0xffff0000 | 0b1111111111110111);
-    pio_sm_put_blocking(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM,
-                        0xffff0000 | 0b1111111111101111);
-    pio_sm_put_blocking(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM,
-                        0xffff0000 | 0b1111111111011111);
-    pio_sm_put_blocking(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM,
-                        0xffff0000 | 0b1111111110111111);
-    pio_sm_put_blocking(pio0, MDL2416C_PIO_SELECT_DISPLAY_SM,
-                        0xffff0000 | 0b1010111111111111);
 
     dma_channel_set_read_addr(mdl_dma_chan, display_buf, true);
 }
