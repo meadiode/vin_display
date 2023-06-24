@@ -1,0 +1,84 @@
+
+
+.program encoder
+
+.wrap_target
+
+start:
+    mov isr, NULL            ; purge ISR and sample the pins.
+    in pins, 2
+    mov x, isr
+
+check_cw:
+    set y, 0b01              ; check if the encoder is moving clock-wise
+    jmp x != y, check_ccw    ; i.e. if A goes low and B stays high.
+    jmp phase2
+
+check_ccw:                   ; check if the encoder is moving counter clock-wise
+    set y, 0b10              ; i.e. if A stays high and B goes low.
+    jmp x != y, start        ; go to start if nothing happens.
+
+
+phase2:                      ; if either of the channels goes low, we wait for
+                             ; the next state in this loop.          
+    
+    mov isr, NULL            ; purge ISR and sample the pins.
+    in pins, 2
+    mov x, isr
+
+    jmp !x, cw_or_ccw        ; if both channels go low, then it means 
+                             ; the encoder moved a full step, so we go fire an
+                             ; interrupt.
+    jmp x != y, start        ; if both channels are high again, then it means
+                             ; the encoder did not finish a full step,
+                             ; so we go to start again.
+    jmp phase2
+
+cw_or_ccw:                   ; check which direction the encoder moved.
+    set x, 0b01
+    jmp x != y, cw_irq
+
+ccw_irq:                     ; if it moved counter clock-wise,
+    irq nowait 4             ; set an interrpupt as a flag to signalize the 
+                             ; ccw direction in the main program.
+    irq nowait 0             ; set the interrupt 0, which has a handler 
+                             ; in the main code.
+    jmp start
+
+cw_irq:                      ; if it moved clock-wise,
+    irq nowait 0             ; set just the interrupt 0, the main code hanler
+                             ; will imply cw-direction without the 
+                             ; other interrupt flag.
+
+.wrap
+
+% c-sdk {
+
+
+#define KNOB_PIO_ENCODER_SM 0
+
+
+static inline void knob_program_init(PIO pio, uint enc_pins_base)
+{
+    pio_gpio_init(pio, enc_pins_base);
+    pio_gpio_init(pio, enc_pins_base + 1);
+
+    pio_sm_set_consecutive_pindirs(pio, KNOB_PIO_ENCODER_SM,
+                                   enc_pins_base, 2, false);
+
+    pio_sm_config c;
+
+    uint offs0 = pio_add_program(pio, &encoder_program);
+    c = encoder_program_get_default_config(offs0);
+    sm_config_set_in_pins(&c, enc_pins_base);
+    sm_config_set_out_shift(&c, false, false, 32);
+    sm_config_set_in_shift(&c, false, false, 32);    
+
+    sm_config_set_clkdiv(&c, 125.0);
+    pio_sm_init(pio, KNOB_PIO_ENCODER_SM, offs0, &c);
+
+    pio_sm_set_enabled(pio, KNOB_PIO_ENCODER_SM, true);
+
+}
+
+%}

@@ -10,6 +10,8 @@
 #include "display.h"
 #include "mdl2416c.h"
 #include "buzzer.h"
+#include "knob.h"
+#include "usb_serial.h"
 
 
 #define SW_MAJOR_VERSION 0
@@ -75,6 +77,10 @@ int main( void )
     mdl2416c_init();
 
     buzzer_init();
+
+    knob_init();
+
+    usb_serial_init();
 
     printf("Starting FreeRTOS SMP on both cores\n");
     

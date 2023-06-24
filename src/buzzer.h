@@ -7,6 +7,6 @@ void buzzer_init(void);
 
 void buzzer_beep(float duration, float freq);
 
-void buzzer_beep_raw(uint32_t duration, uint32_t cycles_hi);
+void buzzer_beep_raw(uint32_t ncycles, uint32_t cycle_duty);
 
 #endif /* __BUZZER_H */

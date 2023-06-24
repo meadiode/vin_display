@@ -53,7 +53,7 @@ static inline void mdl2416c_program_init(PIO pio, uint buzzer_pin)
     sm_config_set_out_shift(&c, false, true, 32);
     sm_config_set_in_shift(&c, false, false, 32);
     sm_config_set_sideset_pins(&c, buzzer_pin);
-    sm_config_set_clkdiv(&c, 125.0);
+    sm_config_set_clkdiv(&c, 125.0); /* 1 MHz */
     pio_sm_init(pio, BUZZER_PIO_SM, offs0, &c);
     pio_sm_set_enabled(pio, BUZZER_PIO_SM, true);
 }

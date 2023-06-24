@@ -12,9 +12,12 @@ void buzzer_init(void)
 
     mdl2416c_program_init(pio0, BUZZER_PIN);
 
-    buzzer_beep(0.1, 80.0);
-    buzzer_beep(0.1, 100.0);
-    buzzer_beep(0.1, 120.0);
+    buzzer_beep(0.05, 130.0);
+    buzzer_beep(0.05, 140.0);
+    buzzer_beep(0.05, 130.0);
+    buzzer_beep(0.05, 140.0);
+    buzzer_beep(0.05, 130.0);
+    buzzer_beep(0.05, 140.0);
 }
 
 
@@ -25,8 +28,8 @@ void buzzer_beep(float duration, float freq)
 }
 
 
-void buzzer_beep_raw(uint32_t duration, uint32_t cycles_hi)
+void buzzer_beep_raw(uint32_t ncycles, uint32_t cycle_duty)
 {
-    pio_sm_put(pio0, BUZZER_PIO_SM, duration);     
-    pio_sm_put(pio0, BUZZER_PIO_SM, cycles_hi);     
+    pio_sm_put_blocking(pio0, BUZZER_PIO_SM, ncycles);     
+    pio_sm_put_blocking(pio0, BUZZER_PIO_SM, cycle_duty);     
 }

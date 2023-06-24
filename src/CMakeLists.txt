@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
-# pioc-sdc: branch master; sha: f396d05f8252d4670d4ea05c8b7ac938ef0cd381
+# pico-sdk: branch master; sha: f396d05f8252d4670d4ea05c8b7ac938ef0cd381
 # FreeRTOS-Kernel: branch smp; sha: 0f9e6e5b521009f585018b47f7e8aa573f010206
 
 
@@ -30,12 +30,16 @@ add_executable(mdl2416c_x10
         hdsp2112.c
         hdsp2000.c
         buzzer.c
+        knob.c
+        usb_descriptors.c
+        usb_serial.c
         )
 
 pico_generate_pio_header(mdl2416c_x10 ${CMAKE_CURRENT_LIST_DIR}/mdl2416c.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR})
 pico_generate_pio_header(mdl2416c_x10 ${CMAKE_CURRENT_LIST_DIR}/hdsp2112.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR})
 pico_generate_pio_header(mdl2416c_x10 ${CMAKE_CURRENT_LIST_DIR}/hdsp2000.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR})
 pico_generate_pio_header(mdl2416c_x10 ${CMAKE_CURRENT_LIST_DIR}/buzzer.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR})
+pico_generate_pio_header(mdl2416c_x10 ${CMAKE_CURRENT_LIST_DIR}/knob.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 target_compile_definitions(mdl2416c_x10 PRIVATE
         WIFI_SSID=\"${WIFI_SSID}\"
@@ -60,6 +64,7 @@ target_link_libraries(mdl2416c_x10
         pico_lwip_ppp
         pico_rand
         hardware_adc
+        tinyusb_device
         FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
         )
 pico_add_extra_outputs(mdl2416c_x10)
