@@ -13,6 +13,7 @@
 #include "knob.h"
 #include "usb_serial.h"
 
+#include "sched.h"
 
 #define SW_MAJOR_VERSION 0
 #define SW_MINOR_VERSION 443
@@ -81,6 +82,8 @@ int main( void )
     knob_init();
 
     usb_serial_init();
+
+    sched_main();
 
     printf("Starting FreeRTOS SMP on both cores\n");
     
