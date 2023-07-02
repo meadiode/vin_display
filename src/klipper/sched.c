@@ -7,13 +7,16 @@
 #include <setjmp.h> // setjmp
 #include "autoconf.h" // CONFIG_*
 #include "basecmd.h" // stats_update
-#include "board/io.h" // readb
-#include "board/irq.h" // irq_save
-#include "board/misc.h" // timer_from_us
-#include "board/pgm.h" // READP
+#include "io.h" // readb
+#include "irq.h" // irq_save
+#include "misc.h" // timer_from_us
+#include "pgm.h" // READP
 #include "command.h" // shutdown
 #include "sched.h" // sched_check_periodic
 #include "stepper.h" // stepper_event
+
+#include <pico/stdlib.h>
+
 
 static struct timer periodic_timer, sentinel_timer, deleted_timer;
 
@@ -329,7 +332,13 @@ void
 sched_shutdown(uint_fast8_t reason)
 {
     irq_disable();
-    longjmp(shutdown_jmp, reason);
+    
+    for (;;)
+    {
+        __breakpoint();
+    }
+
+    // longjmp(shutdown_jmp, reason);
 }
 
 
@@ -353,4 +362,24 @@ sched_main(void)
     irq_enable();
 
     run_tasks();
+}
+
+
+void sched_run_tasks(uint32_t *start)
+{
+    if (SchedStatus.tasks_status != TS_REQUESTED)
+    {    
+        return;
+    }
+    
+    SchedStatus.tasks_status = TS_RUNNING;
+
+    // Run all tasks
+    extern void ctr_run_taskfuncs(void);
+    ctr_run_taskfuncs();
+
+    // Update statistics
+    uint32_t cur = timer_read_time();
+    stats_update(*start, cur);
+    *start = cur;
 }

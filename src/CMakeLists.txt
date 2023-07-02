@@ -26,13 +26,11 @@ set(KLIPPER_FW_SRC_FILES
         klipper/basecmd.c
         klipper/command.c
         klipper/buttons.c
-        klipper/board/irq.c
-        klipper/board/alloc.c
-        klipper/board/timer.c
-        klipper/board/timer_irq.c
-        klipper/board/serial_irq.c
-        klipper/board/crc16_ccitt.c
-        klipper/board/gpio.c
+        klipper/serial_irq.c
+        klipper/klipper.c
+        klipper/alloc.c
+        klipper/crc16_ccitt.c
+        klipper/gpio.c
 )
 
 add_executable(mdl2416c_x10

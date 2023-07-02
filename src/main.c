@@ -12,11 +12,10 @@
 #include "buzzer.h"
 #include "knob.h"
 #include "usb_serial.h"
-
-#include "sched.h"
+#include "klipper.h"
 
 #define SW_MAJOR_VERSION 0
-#define SW_MINOR_VERSION 443
+#define SW_MINOR_VERSION 480
 
 #define MAIN_TASK_PRIORITY  1
 
@@ -61,8 +60,8 @@ void main_task(__unused void *params) {
 
     for (;;)
     {
-        vTaskDelay(5000);
-        printout_sys_stats();
+        vTaskDelay(50000);
+        // printout_sys_stats();
     }
 }
 
@@ -83,13 +82,13 @@ int main( void )
 
     usb_serial_init();
 
-    sched_main();
+    klipper_init();
 
     printf("Starting FreeRTOS SMP on both cores\n");
     
     xTaskCreate(main_task,
                 "main",
-                1024 * 1,
+                1024 * 4,
                 NULL,
                 MAIN_TASK_PRIORITY,
                 &main_task_handle);

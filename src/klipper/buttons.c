@@ -5,8 +5,8 @@
 // This file may be distributed under the terms of the GNU GPLv3 license.
 
 #include "basecmd.h" // oid_alloc
-#include "board/gpio.h" // struct gpio_in
-#include "board/irq.h" // irq_disable
+#include "gpio.h" // struct gpio_in
+#include "irq.h" // irq_disable
 #include "command.h" // DECL_COMMAND
 #include "sched.h" // struct timer
 

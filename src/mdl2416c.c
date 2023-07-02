@@ -73,12 +73,12 @@ void mdl2416c_init(void)
 }
 
 
-void mdl2416c_print(const uint8_t *str)
+void mdl2416c_print_buf(const uint8_t *buf, size_t buflen)
 {
     dma_channel_wait_for_finish_blocking(mdl_dma_chan);
 
     memset(display_buf, ' ', sizeof(display_buf));
-    memcpy(display_buf, str, strnlen(str, sizeof(display_buf)));
+    memcpy(display_buf, buf, MIN(buflen, sizeof(display_buf)));
 
     for (uint16_t i = 0; i < sizeof(display_buf); i++)
     {
@@ -90,5 +90,11 @@ void mdl2416c_print(const uint8_t *str)
         }
     }
 
-    dma_channel_set_read_addr(mdl_dma_chan, display_buf, true);
+    dma_channel_set_read_addr(mdl_dma_chan, display_buf, true);    
+}
+
+
+void mdl2416c_print(const uint8_t *str)
+{
+    mdl2416c_print_buf(str, strnlen(str, sizeof(display_buf)));
 }

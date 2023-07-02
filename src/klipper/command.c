@@ -6,10 +6,10 @@
 
 #include <stdarg.h> // va_start
 #include <string.h> // memcpy
-#include "board/io.h" // readb
-#include "board/irq.h" // irq_poll
-#include "board/misc.h" // crc16_ccitt
-#include "board/pgm.h" // READP
+#include "io.h" // readb
+#include "irq.h" // irq_poll
+#include "misc.h" // crc16_ccitt
+#include "pgm.h" // READP
 #include "command.h" // output_P
 #include "sched.h" // sched_is_shutdown
 

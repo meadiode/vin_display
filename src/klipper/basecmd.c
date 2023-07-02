@@ -6,9 +6,9 @@
 
 #include <string.h> // memset
 #include "basecmd.h" // oid_lookup
-#include "board/irq.h" // irq_save
-#include "board/misc.h" // alloc_maxsize
-#include "board/pgm.h" // READP
+#include "irq.h" // irq_save
+#include "misc.h" // alloc_maxsize
+#include "pgm.h" // READP
 #include "command.h" // DECL_COMMAND
 #include "sched.h" // sched_clear_shutdown
 
@@ -284,6 +284,7 @@ config_reset(uint32_t *args)
 void
 command_get_clock(uint32_t *args)
 {
+    printf("\n\nSending clock: %u\n", timer_read_time());
     sendf("clock clock=%u", timer_read_time());
 }
 DECL_COMMAND_FLAGS(command_get_clock, HF_IN_SHUTDOWN, "get_clock");

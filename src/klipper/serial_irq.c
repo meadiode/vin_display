@@ -6,10 +6,10 @@
 
 #include <string.h> // memmove
 #include "autoconf.h" // CONFIG_SERIAL_BAUD
-#include "board/io.h" // readb
-#include "board/irq.h" // irq_save
-#include "board/misc.h" // console_sendf
-#include "board/pgm.h" // READP
+#include "io.h" // readb
+#include "irq.h" // irq_save
+#include "misc.h" // console_sendf
+#include "pgm.h" // READP
 #include "command.h" // DECL_CONSTANT
 #include "sched.h" // sched_wake_tasks
 #include "serial_irq.h" // serial_enable_tx_irq
@@ -112,7 +112,7 @@ console_sendf(const struct command_encoder *ce, va_list args)
         memmove(&transmit_buf[0], &transmit_buf[tpos], tmax);
         writeb(&transmit_pos, 0);
         writeb(&transmit_max, tmax);
-        // serial_enable_tx_irq();
+        serial_enable_tx_irq();
     }
 
     // Generate message
@@ -121,5 +121,5 @@ console_sendf(const struct command_encoder *ce, va_list args)
 
     // Start message transmit
     writeb(&transmit_max, tmax + msglen);
-    // serial_enable_tx_irq();
+    serial_enable_tx_irq();
 }
