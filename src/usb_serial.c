@@ -9,7 +9,6 @@
 
 #include "usb_serial.h"
 #include "mdl2416c.h"
-#include "klipper/serial_irq.h"
 
 #define USB_SERIAL_TASK_PRIORITY  4
 
@@ -65,41 +64,14 @@ static void dispatch_messages(void)
         {
             txlen = tud_cdc_read(buf, sizeof(buf));
             
-            // if (txlen)
-            // {
-            //     printf("USB serial received: ");
-            // }
-
-            // for (i = 0; i < txlen; i++)
-            // {
-            //     printf("0x%02x ", buf[i]);
-            // }
-
-            // if (txlen)
-            // {
-            //     printf("\n\n");
-            // }
-
             xStreamBufferSend(rx_buf, buf, txlen, 1);
 
             txlen = xStreamBufferReceive(tx_buf, buf, sizeof(buf), 1);
 
-            // if (txlen)
-            // {
-            //     printf("USB serial sending: ");
-            // }
-
-
             for (i = 0; i < txlen; i++)
             {
-                // printf("0x%02x ", buf[i]);
                 tud_cdc_write_char(buf[i]);
             }
-
-            // if (txlen)
-            // {
-            //     printf("\n\n");
-            // }
 
             tud_cdc_write_flush();
         }

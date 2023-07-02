@@ -12,7 +12,6 @@
 #include "buzzer.h"
 #include "knob.h"
 #include "usb_serial.h"
-#include "klipper.h"
 
 #define SW_MAJOR_VERSION 0
 #define SW_MINOR_VERSION 480
@@ -61,7 +60,7 @@ void main_task(__unused void *params) {
     for (;;)
     {
         vTaskDelay(50000);
-        // printout_sys_stats();
+        printout_sys_stats();
     }
 }
 
@@ -81,8 +80,6 @@ int main( void )
     knob_init();
 
     usb_serial_init();
-
-    klipper_init();
 
     printf("Starting FreeRTOS SMP on both cores\n");
     

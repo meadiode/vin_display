@@ -9,7 +9,6 @@
 
 #include "display.h"
 #include "mjson.h"
-#include "websocket.h"
 #include "mdl2416c.h"
 
 #define DISPLAY_TASK_PRIORITY  5
@@ -97,7 +96,7 @@ static void display_task(void *params)
         data_len = mjson_snprintf(buf, sizeof(buf),
                                   "{%Q:%.*g}", "temp", 4, temp_c);
 
-        websocket_send(buf, data_len, 10);
+        // websocket_send(buf, data_len, 10);
 
         if (!user_msg_tmr)
         {

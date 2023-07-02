@@ -3,7 +3,7 @@
 ;
 ; To play a tone, the out FIFO should contain 2 32-bit numbers:
 ;    1 - total number of PWM cycles
-;    2 - length in nanoseconds of the duty/off period of a single PWM cycle 
+;    2 - half length in nanoseconds of a single PWM cycle 
 
 .program buzzer
 .side_set 1
