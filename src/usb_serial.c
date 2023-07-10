@@ -63,16 +63,14 @@ static void dispatch_messages(void)
         if (tud_cdc_available())
         {
             txlen = tud_cdc_read(buf, sizeof(buf));
-            
             xStreamBufferSend(rx_buf, buf, txlen, 1);
+        }
 
-            txlen = xStreamBufferReceive(tx_buf, buf, sizeof(buf), 1);
-
-            for (i = 0; i < txlen; i++)
-            {
-                tud_cdc_write_char(buf[i]);
-            }
-
+        txlen = xStreamBufferReceive(tx_buf, buf, sizeof(buf), 1);
+        if (txlen)
+        {
+            printf("Sending data!\n");
+            tud_cdc_write(buf, txlen);
             tud_cdc_write_flush();
         }
     }

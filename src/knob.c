@@ -3,22 +3,33 @@
 #include <stdio.h>
 #include <hardware/gpio.h>
 #include <hardware/irq.h>
+#include <FreeRTOS.h>
+#include <task.h>
+#include <message_buffer.h>
+
 #include "knob.h"
 #include "knob.pio.h"
-#include "buzzer.h"
 
 #define KNOB_ENC_A_PIN 16
 #define KNOB_ENC_B_PIN 17
-#define KNOB_SW_PIN    24
 
 #define KNOB_PIO           pio1
 #define KNOB_PIO_SYS_IRQ   PIO1_IRQ_0
 #define KNOB_PIO_CCW_IRQ   4
 
+
+#define KNOB_TASK_PRIORITY  6
+
 static int16_t knob_pos = 0;
+static MessageBufferHandle_t msg_buf;
+
+static void knob_task(void *params);
+
 
 void knob_irq0_handler(void)
 {
+    BaseType_t hiprio_woken = pdFALSE;
+
     if (pio_interrupt_get(KNOB_PIO, KNOB_PIO_CCW_IRQ))
     {
         knob_pos--;
@@ -31,15 +42,16 @@ void knob_irq0_handler(void)
 
     pio_interrupt_clear(KNOB_PIO, 0);
 
-    printf("position: %d\n", knob_pos);
+    xMessageBufferSendFromISR(msg_buf, &knob_pos, sizeof(knob_pos),
+                              &hiprio_woken);
+    portYIELD_FROM_ISR(hiprio_woken);
 }
+
 
 void knob_init(void)
 {
     gpio_init(KNOB_ENC_A_PIN);
     gpio_init(KNOB_ENC_B_PIN);
-    gpio_init(KNOB_SW_PIN);
-
 
     pio_set_irq0_source_enabled(KNOB_PIO, pis_interrupt0, true);
     irq_set_exclusive_handler(KNOB_PIO_SYS_IRQ, knob_irq0_handler);
@@ -47,9 +59,11 @@ void knob_init(void)
 
     knob_program_init(KNOB_PIO, KNOB_ENC_A_PIN);
 
-    // for (;;)
-    // {
-    //     sleep_ms(1000);
-    // }
+    msg_buf = xMessageBufferCreate(sizeof(knob_pos) * 10);
+}
 
+
+bool knob_get_pos_update(int16_t *pos)
+{
+    return (xMessageBufferReceive(msg_buf, pos, sizeof(knob_pos), 1) > 0);
 }

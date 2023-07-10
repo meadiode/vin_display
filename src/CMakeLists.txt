@@ -26,6 +26,8 @@ add_executable(mdl2416c_x10
         hdsp2000.c
         buzzer.c
         knob.c
+        buttons.c
+        command.c
         mjson.c
         usb_descriptors.c
         usb_serial.c

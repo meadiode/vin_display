@@ -11,10 +11,12 @@
 #include "mdl2416c.h"
 #include "buzzer.h"
 #include "knob.h"
+#include "buttons.h"
 #include "usb_serial.h"
+#include "command.h"
 
 #define SW_MAJOR_VERSION 0
-#define SW_MINOR_VERSION 480
+#define SW_MINOR_VERSION 481
 
 #define MAIN_TASK_PRIORITY  1
 
@@ -79,7 +81,13 @@ int main( void )
 
     knob_init();
 
+    buttons_init();
+
     usb_serial_init();
+
+    command_init();
+
+    display_init();
 
     printf("Starting FreeRTOS SMP on both cores\n");
     
