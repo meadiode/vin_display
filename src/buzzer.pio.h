@@ -13,24 +13,27 @@
 // ------ //
 
 #define buzzer_wrap_target 0
-#define buzzer_wrap 6
+#define buzzer_wrap 9
 
 static const uint16_t buzzer_program_instructions[] = {
             //     .wrap_target
-    0x6020, //  0: out    x, 32           side 0     
-    0x60c0, //  1: out    isr, 32         side 0     
-    0xa046, //  2: mov    y, isr          side 0     
-    0x1083, //  3: jmp    y--, 3          side 1     
-    0xa046, //  4: mov    y, isr          side 0     
-    0x0085, //  5: jmp    y--, 5          side 0     
-    0x0042, //  6: jmp    x--, 2          side 0     
+    0x80a0, //  0: pull   block           side 0     
+    0x6020, //  1: out    x, 32           side 0     
+    0x80a0, //  2: pull   block           side 0     
+    0x60c0, //  3: out    isr, 32         side 0     
+    0xa0e6, //  4: mov    osr, isr        side 0     
+    0x6050, //  5: out    y, 16           side 0     
+    0x1086, //  6: jmp    y--, 6          side 1     
+    0x6050, //  7: out    y, 16           side 0     
+    0x0088, //  8: jmp    y--, 8          side 0     
+    0x0044, //  9: jmp    x--, 4          side 0     
             //     .wrap
 };
 
 #if !PICO_NO_HARDWARE
 static const struct pio_program buzzer_program = {
     .instructions = buzzer_program_instructions,
-    .length = 7,
+    .length = 10,
     .origin = -1,
 };
 
@@ -50,8 +53,8 @@ static inline void mdl2416c_program_init(PIO pio, uint buzzer_pin)
     pio_sm_config c;
     uint offs0 = pio_add_program(pio, &buzzer_program);
     c = buzzer_program_get_default_config(offs0);
-    sm_config_set_out_shift(&c, false, true, 32);
-    sm_config_set_in_shift(&c, false, false, 32);
+    sm_config_set_out_shift(&c, false, false, 32);
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
     sm_config_set_sideset_pins(&c, buzzer_pin);
     sm_config_set_clkdiv(&c, 125.0); /* 1 MHz */
     pio_sm_init(pio, BUZZER_PIO_SM, offs0, &c);

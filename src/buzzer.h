@@ -3,10 +3,14 @@
 
 #include <stdint.h>
 
+#define BUZZER_EVENT_BUFFER_NONE 0
+#define BUZZER_EVENT_BUFFER_DONE 1
+#define BUZZER_EVENT_BUFFER_FULL 2
+
 void buzzer_init(void);
 
-void buzzer_beep(float duration, float freq);
+bool buzzer_send(const uint8_t *msg, uint32_t msg_len, uint32_t max_delay);
 
-void buzzer_beep_raw(uint32_t ncycles, uint32_t cycle_duty);
+bool buzzer_get_update(uint8_t *event);
 
 #endif /* __BUZZER_H */

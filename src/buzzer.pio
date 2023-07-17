@@ -1,31 +1,34 @@
 
-; Play a tone using 50% PWM cycles
+; Play a sound using variable period PWM cycles
 ;
-; To play a tone, the out FIFO should contain 2 32-bit numbers:
-;    1 - total number of PWM cycles
-;    2 - half length in nanoseconds of a single PWM cycle 
+; To play a single tone, the out FIFO should contain 3 numbers:
+;    1 - 32 bit - total number of PWM cycles
+;    2 - 16 bit - length of the on period of a single cycle
+;    3 - 16 bit - lenght of the off period of a single cycle
 
 .program buzzer
 .side_set 1
 
 .wrap_target
-    out x, 32               side 0 ; X contains total number of cycles
-    out isr, 32             side 0 ; ISR is used to store duty cycle length 
-                                   ; of a PWM cycle, measured in nanoseconds 
+    pull                    side 0
+    out x, 32               side 0 ; X contains the total number of cycles
+    pull                    side 0
+    out isr, 32             side 0 ; ISR contains length of both: on and  
+                                   ; off periods
 
-
-duration_loop:                     ; loop through cycles
-    mov y, isr              side 0 ; Y is the duty cycle counter
+duration_loop:
+    mov osr, isr            side 0 ; reload OSR with period lengths
+    out y, 16               side 0 ; load on-period length
 
 duty_loop_h:
-    jmp y--, duty_loop_h    side 1
+    jmp y--, duty_loop_h    side 1 ; count the on-period
 
-    mov y, isr              side 0 ; renew Y to count off-part of a PWM cycle
+    out y, 16               side 0 ; load length of the off-period to Y 
 
 duty_loop_l:  
-    jmp y--, duty_loop_l    side 0
+    jmp y--, duty_loop_l    side 0 ; count the off-period
 
-    jmp x--, duration_loop  side 0
+    jmp x--, duration_loop  side 0 ; on to the next cycle
 
 .wrap
 
@@ -45,8 +48,8 @@ static inline void mdl2416c_program_init(PIO pio, uint buzzer_pin)
 
     uint offs0 = pio_add_program(pio, &buzzer_program);
     c = buzzer_program_get_default_config(offs0);
-    sm_config_set_out_shift(&c, false, true, 32);
-    sm_config_set_in_shift(&c, false, false, 32);
+    sm_config_set_out_shift(&c, false, false, 32);
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
     sm_config_set_sideset_pins(&c, buzzer_pin);
     sm_config_set_clkdiv(&c, 125.0); /* 1 MHz */
     pio_sm_init(pio, BUZZER_PIO_SM, offs0, &c);

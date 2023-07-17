@@ -9,6 +9,7 @@
 #include "display.h"
 #include "knob.h"
 #include "buttons.h"
+#include "buzzer.h"
 
 #define COMMAND_TASK_PRIORITY  5
 
@@ -58,6 +59,14 @@ static int8_t dispatch_command(const uint8_t *buf, uint32_t size)
 
     case COMMAND_DISPLAY_TEXT:
         display_send(buf, size, 10);
+        break;
+
+    case COMMAND_BUZZER_PLAY:
+        buzzer_send(buf, size, 10);
+        break;
+
+    case COMMAND_BUZZER_QUEUE:
+        buzzer_send(buf, size, 10);
         break;
 
     default:
@@ -193,6 +202,21 @@ static uint32_t pack_button_event(uint8_t btn_state, uint8_t *buf)
 }
 
 
+static uint32_t pack_buzzer_event(uint8_t buzzer_event, uint8_t *buf)
+{
+    uint16_t crc;
+
+    buf[0] = 6;
+    buf[1] = COMMAND_BUZZER_EVENT;
+    buf[2] = buzzer_event;
+    crc = crc16_ccitt(buf, 3);
+    buf[3] = (crc >> 8) & 0xff;
+    buf[4] = crc & 0xff;
+    buf[5] = MESSAGE_SYNC;
+
+    return buf[0];
+}
+
 
 static void process_outgoing_data(void)
 {
@@ -200,6 +224,7 @@ static void process_outgoing_data(void)
     uint8_t buf[128];
     int16_t knob_pos;
     uint8_t btn_state;
+    uint8_t buzzer_event;
     uint32_t size;
 
     while (knob_get_pos_update(&knob_pos))
@@ -215,6 +240,13 @@ static void process_outgoing_data(void)
         size = pack_button_event(btn_state, buf);
         usb_serial_tx(buf, size);
     }
+
+    while (buzzer_get_update(&buzzer_event))
+    {
+        printf("Buzzer event: %d\n", buzzer_event);
+        size = pack_buzzer_event(buzzer_event, buf);
+        usb_serial_tx(buf, size);
+    }
 }
 
 
@@ -222,7 +254,7 @@ static void command_task(void *params)
 {
     for (;;)
     {
-        vTaskDelay(100);
+        vTaskDelay(10);
 
         dispatch_incoming_data();
 

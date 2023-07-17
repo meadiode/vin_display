@@ -39,7 +39,7 @@ static const struct {
 
 void hdsp2000_init(void)
 {
-    dma_channel_config c;
+    dma_channel_config cfg;
 
     gpio_init(HDSP_CLOCK);
     gpio_init(HDSP_DATA_IN);
@@ -56,15 +56,15 @@ void hdsp2000_init(void)
     hdsp_dma_chan = dma_claim_unused_channel(true);
     hdsp_dma_ctrl_chan = dma_claim_unused_channel(true);
 
-    c = dma_channel_get_default_config(hdsp_dma_chan);
-    channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
-    channel_config_set_read_increment(&c, true);
-    channel_config_set_dreq(&c, DREQ_PIO0_TX0);
-    channel_config_set_chain_to(&c, hdsp_dma_ctrl_chan);
+    cfg = dma_channel_get_default_config(hdsp_dma_chan);
+    channel_config_set_transfer_data_size(&cfg, DMA_SIZE_8);
+    channel_config_set_read_increment(&cfg, true);
+    channel_config_set_dreq(&cfg, DREQ_PIO0_TX0);
+    channel_config_set_chain_to(&cfg, hdsp_dma_ctrl_chan);
 
     dma_channel_configure(
         hdsp_dma_chan,
-        &c,
+        &cfg,
         &pio0_hw->txf[HDSP2000_PIO_PUSH_DATA_SM],    /* Write address */
         display_buf,                                 /* Read address */
         sizeof(display_buf),
@@ -76,15 +76,15 @@ void hdsp2000_init(void)
        when it finishes transferring the buffer to the PIO program,
        in the similar manner as in pico-examples/dma/control_blocks/control_blocks.c
      */
-    c = dma_channel_get_default_config(hdsp_dma_ctrl_chan);
-    channel_config_set_transfer_data_size(&c, DMA_SIZE_32);
-    channel_config_set_read_increment(&c, true);
-    channel_config_set_write_increment(&c, false);
-    channel_config_set_ring(&c, false, 1);
+    cfg = dma_channel_get_default_config(hdsp_dma_ctrl_chan);
+    channel_config_set_transfer_data_size(&cfg, DMA_SIZE_32);
+    channel_config_set_read_increment(&cfg, true);
+    channel_config_set_write_increment(&cfg, false);
+    channel_config_set_ring(&cfg, false, 1);
 
     dma_channel_configure(
         hdsp_dma_ctrl_chan,
-        &c,
+        &cfg,
         &dma_hw->ch[hdsp_dma_chan].al3_read_addr_trig,   /* Write address */
         &control_blocks[0],                              /* Read address */
         1,

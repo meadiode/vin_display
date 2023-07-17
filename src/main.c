@@ -16,7 +16,7 @@
 #include "command.h"
 
 #define SW_MAJOR_VERSION 0
-#define SW_MINOR_VERSION 481
+#define SW_MINOR_VERSION 482
 
 #define MAIN_TASK_PRIORITY  1
 
@@ -83,11 +83,11 @@ int main( void )
 
     buttons_init();
 
-    usb_serial_init();
-
     command_init();
 
     display_init();
+
+    usb_serial_init();
 
     printf("Starting FreeRTOS SMP on both cores\n");
     

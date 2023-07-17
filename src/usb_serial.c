@@ -89,7 +89,7 @@ static void usb_serial_task(void *params)
         tud_task();
         dispatch_messages();
 
-        vTaskDelay(100);
+        vTaskDelay(1);
     }
 
 }

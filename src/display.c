@@ -37,7 +37,6 @@ static void display_task(void *params)
 {    
     static uint8_t buf[DISPLAY_MSG_BUF_SIZE];
     size_t data_len;
-    uint8_t dbuf[40] = {0};
 
     for (;;)
     {
