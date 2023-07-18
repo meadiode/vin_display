@@ -1,14 +1,20 @@
 # Vintage display module
 
-An RP2040 based display module using vintage dot-matrix, or 16-segment vintage display ICs.
-The end goal is to develop it into a display for 3d-printers and/or CNC machines.
+A series of RP2040 based display modules for 3d-printers using dot-matrix, or 16-segment vintage display ICs.
+Intended to be used with [Klipper firmware](https://www.klipper3d.org/).
 
+Currently the following displays were built and tested:
+
+## VinDisplay mdl2416c_x10
+Display module features ten MDL2416C which are 4-digit 16-segment LED displays.
+![VinDisplay mdl2416c_x10](images/vindisplay_mdl2416c_x10.jpg)
 
 ## DemoBoard 1
 Simplistic demo-board to evaluate MDL2416C(16-segment LED display), 8 of them are driven by a pico_w. The board just displays current time and date and also prints custom message through a web-interface.
 ![DemoBoard1](images/demoboard1.jpg)
 
-## Building
+
+## Firmware
 
 ### Prerequisites 
 
@@ -53,7 +59,7 @@ It should start a GDB server on the default port 3333.
 To flash and run/debug the firmware navigate to the project's directory and run the following: 
 ```
 cd build
-gdb-multiarch ./display_demo.elf
+gdb-multiarch ./<binary name>.elf
 ```
 Once GDB started:
 ```
