@@ -9,5 +9,7 @@ void mdl2416c_print(const uint8_t *str);
 
 void mdl2416c_print_buf(const uint8_t *buf, size_t buflen);
 
+void mdl2416c_set_brightness(uint8_t brightness);
+
 
 #endif /* __MDL2416C_H */

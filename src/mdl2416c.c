@@ -2,6 +2,7 @@
 #include <string.h>
 #include <hardware/pio.h>
 #include <hardware/dma.h>
+#include <hardware/pwm.h>
 #include <pico/time.h>
 
 #include "mdl2416c.h"
@@ -23,6 +24,8 @@
 
 static uint8_t display_buf[4 * MDL_NUM_DISPLAYS] = {0};
 static int32_t mdl_dma_chan = -1; 
+static uint32_t bl_pwm_slice = 0;
+static uint32_t bl_pwm_chan = 0;
 
 
 void mdl2416c_init(void)
@@ -32,7 +35,6 @@ void mdl2416c_init(void)
     gpio_init(MDL_CUE_PIN);
     gpio_init(MDL_CLR_PIN);
 
-    gpio_set_dir(MDL_BL_PIN, GPIO_OUT);
     gpio_set_dir(MDL_CU_PIN, GPIO_OUT);
     gpio_set_dir(MDL_CUE_PIN, GPIO_OUT);
     gpio_set_dir(MDL_CLR_PIN, GPIO_OUT);
@@ -40,10 +42,19 @@ void mdl2416c_init(void)
     gpio_put(MDL_CU_PIN, 1);
     gpio_put(MDL_CUE_PIN, 0);
     gpio_put(MDL_CLR_PIN, 1);
-    gpio_put(MDL_BL_PIN, 1);
 
+    /* BL pin is PWMed for brightness control */
+    gpio_set_function(MDL_BL_PIN, GPIO_FUNC_PWM);
+    bl_pwm_slice = pwm_gpio_to_slice_num(MDL_BL_PIN);
+    bl_pwm_chan = pwm_gpio_to_channel(MDL_BL_PIN);
+    pwm_set_clkdiv(bl_pwm_slice, 4.0f);
+    pwm_set_wrap(bl_pwm_slice, 0xff);
+    pwm_set_chan_level(bl_pwm_slice, bl_pwm_chan, 0xff);
+    pwm_set_enabled(bl_pwm_slice, true);
+
+    /* Clear display's RAM */
     gpio_put(MDL_CLR_PIN, 0);
-    sleep_ms(500);
+    sleep_ms(20);
     gpio_put(MDL_CLR_PIN, 1);
 
 
@@ -66,10 +77,10 @@ void mdl2416c_init(void)
     );
 
     // mdl2416c_print("0123456789abcdefghijklmnopqrstuvwxyz+=-/");
-    mdl2416c_print("0000111122223333444455556666777788889999");
-    sleep_ms(500);
+    // mdl2416c_print("0000111122223333444455556666777788889999");
+    mdl2416c_print("****************************************");
+    sleep_ms(1000);
     mdl2416c_print("                                        ");
-
 }
 
 
@@ -97,4 +108,10 @@ void mdl2416c_print_buf(const uint8_t *buf, size_t buflen)
 void mdl2416c_print(const uint8_t *str)
 {
     mdl2416c_print_buf(str, strnlen(str, sizeof(display_buf)));
+}
+
+
+void mdl2416c_set_brightness(uint8_t brightness)
+{
+    pwm_set_chan_level(bl_pwm_slice, bl_pwm_chan, (uint16_t)brightness);
 }

@@ -53,6 +53,7 @@ target_link_libraries(mdl2416c_x10
         hardware_rtc
         pico_rand
         hardware_adc
+        hardware_pwm
         tinyusb_device
         FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
         )

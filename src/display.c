@@ -15,6 +15,8 @@
 #define DISPLAY_TASK_PRIORITY  5
 #define DISPLAY_MSG_BUF_SIZE   128
 
+#define DISPLAY_DEFAULT_BRIGHTNESS 80
+
 static TaskHandle_t display_task_handle = NULL;
 static MessageBufferHandle_t msg_buf;
 
@@ -23,6 +25,8 @@ static void display_task(void *params);
 void display_init(void)
 {
     msg_buf = xMessageBufferCreate(DISPLAY_MSG_BUF_SIZE);
+
+    mdl2416c_set_brightness(DISPLAY_DEFAULT_BRIGHTNESS);
 
     xTaskCreate(display_task,
                 "display",
@@ -55,6 +59,16 @@ static void display_task(void *params)
                     
                     taskENTER_CRITICAL();
                     mdl2416c_print_buf(text_buf, text_length);
+                    taskEXIT_CRITICAL();
+                }
+                break;
+
+            case COMMAND_SET_BRIGHTNESS:
+                {
+                    uint8_t br_level = buf[1];
+
+                    taskENTER_CRITICAL();
+                    mdl2416c_set_brightness(br_level);
                     taskEXIT_CRITICAL();
                 }
                 break;

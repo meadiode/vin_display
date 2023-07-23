@@ -61,6 +61,10 @@ static int8_t dispatch_command(const uint8_t *buf, uint32_t size)
         display_send(buf, size, 10);
         break;
 
+    case COMMAND_SET_BRIGHTNESS:
+        display_send(buf, size, 10);
+        break;
+
     case COMMAND_BUZZER_PLAY:
         buzzer_send(buf, size, 10);
         break;
