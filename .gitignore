@@ -10,4 +10,6 @@ hardware/*/*-backups
 hardware/*/#auto_saved_files#
 hardware/*/_autosave*
 hardware/*/*.lck
+hardware/*/*_gerbers
+hardware/*/*_gerbers.zip
 *.kicad*-bak
