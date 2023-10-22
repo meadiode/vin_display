@@ -10,8 +10,6 @@
 #include "display.h"
 #include "command.h"
 
-#include "mdl2416c.h"
-
 #define DISPLAY_TASK_PRIORITY  5
 #define DISPLAY_MSG_BUF_SIZE   128
 
@@ -26,7 +24,7 @@ void display_init(void)
 {
     msg_buf = xMessageBufferCreate(DISPLAY_MSG_BUF_SIZE);
 
-    mdl2416c_set_brightness(DISPLAY_DEFAULT_BRIGHTNESS);
+    display_set_brightness(DISPLAY_DEFAULT_BRIGHTNESS);
 
     xTaskCreate(display_task,
                 "display",
@@ -58,7 +56,7 @@ static void display_task(void *params)
                     const uint8_t *text_buf = &buf[2];
                     
                     taskENTER_CRITICAL();
-                    mdl2416c_print_buf(text_buf, text_length);
+                    display_print_buf(text_buf, text_length);
                     taskEXIT_CRITICAL();
                 }
                 break;
@@ -68,7 +66,7 @@ static void display_task(void *params)
                     uint8_t br_level = buf[1];
 
                     taskENTER_CRITICAL();
-                    mdl2416c_set_brightness(br_level);
+                    display_set_brightness(br_level);
                     taskEXIT_CRITICAL();
                 }
                 break;

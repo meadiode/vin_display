@@ -13,23 +13,22 @@
 // ------------ //
 
 #define display_char_wrap_target 1
-#define display_char_wrap 5
+#define display_char_wrap 4
 
 static const uint16_t display_char_program_instructions[] = {
     0xbf42, //  0: nop                    side 1 [15]
             //     .wrap_target
-    0xd024, //  1: irq    wait 4          side 1     
-    0x7061, //  2: out    null, 1         side 1     
-    0x7007, //  3: out    pins, 7         side 1     
-    0xaa42, //  4: nop                    side 0 [10]
-    0xba42, //  5: nop                    side 1 [10]
+    0xd026, //  1: irq    wait 6          side 1     
+    0x7008, //  2: out    pins, 8         side 1     
+    0xaa42, //  3: nop                    side 0 [10]
+    0xda26, //  4: irq    wait 6          side 1 [10]
             //     .wrap
 };
 
 #if !PICO_NO_HARDWARE
 static const struct pio_program display_char_program = {
     .instructions = display_char_program_instructions,
-    .length = 6,
+    .length = 5,
     .origin = -1,
 };
 
@@ -41,39 +40,39 @@ static inline pio_sm_config display_char_program_get_default_config(uint offset)
 }
 #endif
 
-// ------------ //
-// set_char_pos //
-// ------------ //
+// ----------- //
+// select_char //
+// ----------- //
 
-#define set_char_pos_wrap_target 0
-#define set_char_pos_wrap 10
+#define select_char_wrap_target 0
+#define select_char_wrap 10
 
-static const uint16_t set_char_pos_program_instructions[] = {
+static const uint16_t select_char_program_instructions[] = {
             //     .wrap_target
-    0xc025, //  0: irq    wait 5                     
+    0xc027, //  0: irq    wait 7                     
     0xe020, //  1: set    x, 0                       
-    0x20c4, //  2: wait   1 irq, 4                   
-    0xa001, //  3: mov    pins, x                    
-    0xc044, //  4: irq    clear 4                    
+    0xa001, //  2: mov    pins, x                    
+    0x25c6, //  3: wait   1 irq, 6               [5] 
+    0x20c6, //  4: wait   1 irq, 6                   
     0xa049, //  5: mov    y, !x                      
     0x0087, //  6: jmp    y--, 7                     
     0xa02a, //  7: mov    x, !y                      
     0xe048, //  8: set    y, 8                       
     0x00a2, //  9: jmp    x != y, 2                  
-    0xaa42, // 10: nop                           [10]
+    0xc027, // 10: irq    wait 7                     
             //     .wrap
 };
 
 #if !PICO_NO_HARDWARE
-static const struct pio_program set_char_pos_program = {
-    .instructions = set_char_pos_program_instructions,
+static const struct pio_program select_char_program = {
+    .instructions = select_char_program_instructions,
     .length = 11,
     .origin = -1,
 };
 
-static inline pio_sm_config set_char_pos_program_get_default_config(uint offset) {
+static inline pio_sm_config select_char_program_get_default_config(uint offset) {
     pio_sm_config c = pio_get_default_sm_config();
-    sm_config_set_wrap(&c, offset + set_char_pos_wrap_target, offset + set_char_pos_wrap);
+    sm_config_set_wrap(&c, offset + select_char_wrap_target, offset + select_char_wrap);
     return c;
 }
 #endif
@@ -83,21 +82,26 @@ static inline pio_sm_config set_char_pos_program_get_default_config(uint offset)
 // -------------- //
 
 #define select_display_wrap_target 0
-#define select_display_wrap 3
+#define select_display_wrap 8
 
 static const uint16_t select_display_program_instructions[] = {
             //     .wrap_target
-    0x20c5, //  0: wait   1 irq, 5                   
-    0x607d, //  1: out    null, 29                   
-    0x6003, //  2: out    pins, 3                    
-    0xc045, //  3: irq    clear 5                    
+    0xe020, //  0: set    x, 0                       
+    0xa001, //  1: mov    pins, x                    
+    0xa049, //  2: mov    y, !x                      
+    0x0084, //  3: jmp    y--, 4                     
+    0xa02a, //  4: mov    x, !y                      
+    0x20c7, //  5: wait   1 irq, 7                   
+    0x20c7, //  6: wait   1 irq, 7                   
+    0xe046, //  7: set    y, 6                       
+    0x00a1, //  8: jmp    x != y, 1                  
             //     .wrap
 };
 
 #if !PICO_NO_HARDWARE
 static const struct pio_program select_display_program = {
     .instructions = select_display_program_instructions,
-    .length = 4,
+    .length = 9,
     .origin = -1,
 };
 
@@ -106,64 +110,105 @@ static inline pio_sm_config select_display_program_get_default_config(uint offse
     sm_config_set_wrap(&c, offset + select_display_wrap_target, offset + select_display_wrap);
     return c;
 }
+#endif
+
+// --------------- //
+// write_ctrl_word //
+// --------------- //
+
+#define write_ctrl_word_wrap_target 1
+#define write_ctrl_word_wrap 5
+
+static const uint16_t write_ctrl_word_program_instructions[] = {
+    0x1002, //  0: jmp    2               side 1     
+            //     .wrap_target
+    0xd027, //  1: irq    wait 7          side 1     
+    0x7078, //  2: out    null, 24        side 1     
+    0x7008, //  3: out    pins, 8         side 1     
+    0xaa42, //  4: nop                    side 0 [10]
+    0xda27, //  5: irq    wait 7          side 1 [10]
+            //     .wrap
+};
+
+#if !PICO_NO_HARDWARE
+static const struct pio_program write_ctrl_word_program = {
+    .instructions = write_ctrl_word_program_instructions,
+    .length = 6,
+    .origin = -1,
+};
+
+static inline pio_sm_config write_ctrl_word_program_get_default_config(uint offset) {
+    pio_sm_config c = pio_get_default_sm_config();
+    sm_config_set_wrap(&c, offset + write_ctrl_word_wrap_target, offset + write_ctrl_word_wrap);
+    sm_config_set_sideset(&c, 1, false, false);
+    return c;
+}
 
 #include "hardware/clocks.h"
-#define HDSP2112_DATA_PINS_NUM  7
-#define HDSP2112_ADDR_PINS_NUM  3
-#define HDSP2112_CE_PINS_NUM    3
-#define HDSP2112_PIO_DISPLAY_CHAR_SM   0
-#define HDSP2112_PIO_SET_CHAR_POS_SM   1
-#define HDSP2112_PIO_SELECT_DISPLAY_SM 2
-static inline void hdsp2112_program_init(PIO pio, uint data_pins_base,
-                                         uint addr_pins_base, uint ce_pins_base,
-                                         uint write_pin)
+#define HDSP2112_PIO_DISPLAY_CHAR_SM       0
+#define HDSP2112_PIO_SELECT_CHAR_SM        1
+#define HDSP2112_PIO_SELECT_DISPLAY_SM     2
+#define HDSP2112_PIO_WRITE_CTRL_WORD_SM    3
+#define HDSP2112_PIO_DISP_SM_MASK ((1 << HDSP2112_PIO_DISPLAY_CHAR_SM) | \
+                                   (1 << HDSP2112_PIO_SELECT_CHAR_SM) | \
+                                   (1 << HDSP2112_PIO_SELECT_DISPLAY_SM))
+#define HDSP2112_PIO_CTRL_SM_MASK ((1 << HDSP2112_PIO_SELECT_DISPLAY_SM) | \
+                                   (1 << HDSP2112_PIO_WRITE_CTRL_WORD_SM))
+static inline void hdsp2112_program_init(PIO pio)
 {
     uint8_t i;
-    for (i = 0; i < HDSP2112_DATA_PINS_NUM; i++)
+    for (i = 0; i < HDSP_DATA_PINS_NUM; i++)
     {
-        pio_gpio_init(pio, data_pins_base + i);
+        pio_gpio_init(pio, HDSP_DATA_START_PIN + i);
     }
-    for (i = 0; i < HDSP2112_ADDR_PINS_NUM; i++)
+    for (i = 0; i < HDSP_ADDR_PINS_NUM; i++)
     {
-        pio_gpio_init(pio, addr_pins_base + i);
+        pio_gpio_init(pio, HDSP_ADDR_START_PIN + i);
     }
-    for (i = 0; i < HDSP2112_CE_PINS_NUM; i++)
+    for (i = 0; i < HDSP_CE_PINS_NUM; i++)
     {
-        pio_gpio_init(pio, ce_pins_base + i);
+        pio_gpio_init(pio, HDSP_CE_START_PIN + i);
     }
-    pio_gpio_init(pio, write_pin);
+    pio_gpio_init(pio, HDSP_WR_PIN);
     pio_sm_set_consecutive_pindirs(pio, HDSP2112_PIO_DISPLAY_CHAR_SM,
-                                   data_pins_base, HDSP2112_DATA_PINS_NUM,
+                                   HDSP_DATA_START_PIN, HDSP_DATA_PINS_NUM,
                                    true);
     pio_sm_set_consecutive_pindirs(pio, HDSP2112_PIO_DISPLAY_CHAR_SM,
-                                   write_pin, 1, true);
-    pio_sm_set_consecutive_pindirs(pio, HDSP2112_PIO_SET_CHAR_POS_SM,
-                                   addr_pins_base, HDSP2112_ADDR_PINS_NUM,
+                                   HDSP_WR_PIN, 1, true);
+    pio_sm_set_consecutive_pindirs(pio, HDSP2112_PIO_SELECT_CHAR_SM,
+                                   HDSP_ADDR_START_PIN, HDSP_ADDR_PINS_NUM,
                                    true);
     pio_sm_set_consecutive_pindirs(pio, HDSP2112_PIO_SELECT_DISPLAY_SM,
-                                   ce_pins_base, HDSP2112_CE_PINS_NUM,
+                                   HDSP_CE_START_PIN, HDSP_CE_PINS_NUM,
                                    true);
     pio_sm_config c;
     uint offs0 = pio_add_program(pio, &display_char_program);
     c = display_char_program_get_default_config(offs0);
     sm_config_set_out_shift(&c, false, true, 8);
-    sm_config_set_out_pins(&c, data_pins_base, HDSP2112_DATA_PINS_NUM);
-    sm_config_set_sideset_pins(&c, write_pin);
+    sm_config_set_out_pins(&c, HDSP_DATA_START_PIN, HDSP_DATA_PINS_NUM);
+    sm_config_set_sideset_pins(&c, HDSP_WR_PIN);
     sm_config_set_clkdiv(&c, 4.0);
     pio_sm_init(pio, HDSP2112_PIO_DISPLAY_CHAR_SM, offs0, &c);
-    uint offs1 = pio_add_program(pio, &set_char_pos_program);
-    c = set_char_pos_program_get_default_config(offs1);
+    uint offs1 = pio_add_program(pio, &select_char_program);
+    c = select_char_program_get_default_config(offs1);
     sm_config_set_out_shift(&c, false, false, 32);
-    sm_config_set_out_pins(&c, addr_pins_base, HDSP2112_ADDR_PINS_NUM);
+    sm_config_set_out_pins(&c, HDSP_ADDR_START_PIN, HDSP_ADDR_PINS_NUM);
     sm_config_set_clkdiv(&c, 4.0);
-    pio_sm_init(pio, HDSP2112_PIO_SET_CHAR_POS_SM, offs1, &c);
+    pio_sm_init(pio, HDSP2112_PIO_SELECT_CHAR_SM, offs1, &c);
     uint offs2 = pio_add_program(pio, &select_display_program);
     c = select_display_program_get_default_config(offs2);
     sm_config_set_out_shift(&c, false, true, 32);
-    sm_config_set_out_pins(&c, ce_pins_base, HDSP2112_CE_PINS_NUM);
+    sm_config_set_out_pins(&c, HDSP_CE_START_PIN, HDSP_CE_PINS_NUM);
     sm_config_set_clkdiv(&c, 4.0);
     pio_sm_init(pio, HDSP2112_PIO_SELECT_DISPLAY_SM, offs2, &c);
-    pio_set_sm_mask_enabled(pio, 0x07, true);
+    uint offs3 = pio_add_program(pio, &write_ctrl_word_program);
+    c = write_ctrl_word_program_get_default_config(offs3);
+    sm_config_set_out_shift(&c, false, true, 32);
+    sm_config_set_out_pins(&c, HDSP_DATA_START_PIN, HDSP_DATA_PINS_NUM);
+    sm_config_set_sideset_pins(&c, HDSP_WR_PIN);
+    sm_config_set_clkdiv(&c, 4.0);
+    pio_sm_init(pio, HDSP2112_PIO_WRITE_CTRL_WORD_SM, offs3, &c);
+    pio_set_sm_mask_enabled(pio, HDSP2112_PIO_DISP_SM_MASK, true);
 }
 
 #endif

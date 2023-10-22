@@ -8,7 +8,6 @@
 #include <stdio.h>
 
 #include "display.h"
-#include "mdl2416c.h"
 #include "buzzer.h"
 #include "knob.h"
 #include "buttons.h"
@@ -16,7 +15,7 @@
 #include "command.h"
 
 #define SW_MAJOR_VERSION 0
-#define SW_MINOR_VERSION 482
+#define SW_MINOR_VERSION 490
 
 #define MAIN_TASK_PRIORITY  1
 
@@ -57,8 +56,6 @@ void main_task(__unused void *params) {
     printf("\n");    
     printf("SW version: %u.%u\n", SW_MAJOR_VERSION, SW_MINOR_VERSION);
 
-    // display_init();
-
     for (;;)
     {
         vTaskDelay(50000);
@@ -75,7 +72,7 @@ int main( void )
 
     rtc_init();
 
-    mdl2416c_init();
+    display_driver_init();
 
     buzzer_init();
 
