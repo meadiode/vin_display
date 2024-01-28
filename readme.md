@@ -6,15 +6,19 @@ Intended to be used with [Klipper firmware](https://www.klipper3d.org/).
 Currently the following displays were built and tested:
 
 ## VinDisplay mdl2416c_x10
-Display module features ten MDL2416C which are 4-digit 16-segment LED displays.
+Display module features ten MDL2416C which are 4-character 16-segment LED displays.
 ![VinDisplay mdl2416c_x10](images/vindisplay_mdl2416c_x10.jpg)
+
+## VinDisplay hdsp2112_x6
+Display module features six HDSP-2112 which are 8-character 5x7 LED dot-matrix displays.
+![VinDisplay hdsp2112_x6](images/vindisplay_hdsp2112_x6.jpg)
 
 ## DemoBoard 1
 Simplistic demo-board to evaluate MDL2416C(16-segment LED display), 8 of them are driven by a pico_w. The board just displays current time and date and also prints custom message through a web-interface.
 ![DemoBoard1](images/demoboard1.jpg)
 
 
-## Firmware
+## Building Firmware
 
 ### Prerequisites 
 
@@ -41,7 +45,7 @@ FREERTOS_KERNEL_PATH=/* Path to the root of FreeRTOS kernel directory */
 cd src
 mkdir build
 cd build
-cmake -DPICO_BOARD=pico_w -DCMAKE_BUILD_TYPE=Debug ..
+cmake -DCMAKE_BUILD_TYPE=Debug ..
 
 make
 ```

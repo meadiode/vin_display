@@ -59,26 +59,17 @@ void knob_irq0_handler(void)
 
 void knob_init(void)
 {
-    // gpio_init(KNOB_ENC_A_PIN);
-    // gpio_init(KNOB_ENC_B_PIN);
+    gpio_init(KNOB_ENC_A_PIN);
+    gpio_init(KNOB_ENC_B_PIN);
 
-    // gpio_set_dir(KNOB_ENC_A_PIN, false);
-    // gpio_set_dir(KNOB_ENC_B_PIN, false);
-
-    // gpio_set_pulls(KNOB_ENC_A_PIN, true, false);
-    // gpio_set_pulls(KNOB_ENC_B_PIN, true, false);
-
-    // gpio_set_input_enabled(KNOB_ENC_A_PIN, false);
-    // gpio_set_input_hysteresis_enabled(KNOB_ENC_A_PIN, false);
-
-    // gpio_set_input_enabled(KNOB_ENC_B_PIN, false);
-    // gpio_set_input_hysteresis_enabled(KNOB_ENC_B_PIN, false);
+    gpio_set_dir(KNOB_ENC_A_PIN, false);
+    gpio_set_dir(KNOB_ENC_B_PIN, false);
 
     pio_set_irq0_source_enabled(KNOB_PIO, pis_interrupt0, true);
     irq_set_exclusive_handler(KNOB_PIO_SYS_IRQ, knob_irq0_handler);
     irq_set_enabled(KNOB_PIO_SYS_IRQ, true);
 
-    // knob_program_init(KNOB_PIO, KNOB_ENC_A_PIN);
+    knob_program_init(KNOB_PIO, KNOB_ENC_A_PIN);
 
     msg_buf = xMessageBufferCreate(sizeof(knob_pos) * 10);
 }

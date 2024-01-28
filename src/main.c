@@ -15,7 +15,7 @@
 #include "command.h"
 
 #define SW_MAJOR_VERSION 0
-#define SW_MINOR_VERSION 490
+#define SW_MINOR_VERSION 492
 
 #define MAIN_TASK_PRIORITY  1
 
