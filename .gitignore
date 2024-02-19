@@ -2,6 +2,7 @@
 src/build/*
 *.sublime-*
 *.pyd
+*.pyc
 *gerbers/*
 hardware/*/gerbers
 hardware/*/bom

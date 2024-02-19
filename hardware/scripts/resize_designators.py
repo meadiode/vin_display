@@ -4,7 +4,7 @@ import pcbnew
 board = pcbnew.GetBoard()
 
 # Set the desired font size
-new_size = pcbnew.FromMM(0.5)
+new_size = pcbnew.FromMM(0.7)
 
 # Create a VECTOR2I object for the new font size
 new_size_vector = pcbnew.VECTOR2I(new_size, new_size)
