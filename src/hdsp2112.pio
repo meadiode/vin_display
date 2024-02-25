@@ -1,70 +1,64 @@
 
 .program display_char
-.side_set 1
-    nop             side 1 [15]   ; set the WR pin high initially
 
+; sets character data pins
 .wrap_target
-    irq wait 6      side 1        ; wait address setup
-    out pins, 8     side 1        ; output a character
-    nop             side 0 [10]   ; pull WR low and then high to trigger write
-    irq wait 6      side 1 [10]   ; let the select_char program select position
-                                  ; for the next character 
+    out pins, 8                              ; output a character
+    irq wait  4                              ; let the select_display program to pull the WR pin 
+    irq wait  4                              ; wait till the select_display program is done with the current character
 .wrap
 
 
+; sets character address pins
 .program select_char
 .wrap_target
-    irq wait 7                    ; wait display select
-    set x, 0                      ; X is containing character index
+    set x, 0                                 ; X contains character index(address)
 
 next_char:
-    mov pins, x                   ; configure the pins for the current character position
-    wait 1 irq 6  [5]             ; wait till a character is ready to be written
-    wait 1 irq 6                  ; wait till a character is written 
+    mov pins, x                              ; configure the pins for the current character position
 
-    mov y, !x                     ; increment X through negating and decrement
+    irq wait 5                               ; let the select_display program to pull the WR pin 
+    irq wait 5                               ; wait till the select_display program is done with the current character
+
+    mov y, !x                                ; increment X through negating and decrement and negating again
     jmp y--, next_char_cont
 next_char_cont:
     mov x, !y
-    set y, 8
-    jmp x != y, next_char
-    irq wait 7                    ; all characters are shown, go to the next display
+
+    set y, 8                                 ; check if X reached 8
+    jmp x != y, next_char                    ; if yes, then wrap
 .wrap
 
 
-.program select_display
-.wrap_target
-    set x, 0                      ; X contains display address from 0 to 9
+; sets display CE pins and triggers writing
+.program select_display_and_write_chars
+.side_set 1
+.wrap_target   
+    set x, 0              side 1             ; X contains display index
 
 next_disp:
-    mov pins, x                   ; set display address pins
+    set y, 7              side 1             ; Y counts characters in the current display
 
-    mov y, !x                     ; increment X through negating and decrement
-    jmp y--, next_disp_cont
-next_disp_cont:
-    mov x, !y
-    
-    wait 1 irq 7                  ; let the select_char program know that one 
-                                  ; of the displays is selected
-    wait 1 irq 7                  ; wait till all characters are shown
+display_char:
+    wait 1 irq 4          side 1             ; wait till character address and data pins are configured
+    wait 1 irq 5          side 1
 
-    set y, 6                      ; check if X reached 6 (number of displays)
-                                  ; if no then select the next display
-                                  ; if yes then wrap the program
-    jmp x != y, next_disp
-.wrap
+    mov pins, x           side 1 [10]        ; pull CE and WR pins, so a character is written
+    nop                   side 0 [10]
+    set pins, 7           side 1 [10]
 
+    wait 1 irq 4          side 1             ; let set data and address for the next character
+    wait 1 irq 5          side 1             
 
-.program write_ctrl_word
-.side_set 1
-    jmp start       side 1        ; skip setting the irq for the first time
-.wrap_target
-    irq wait 7      side 1        ; wait for display selection
-start:
-    out null, 24    side 1        ; dump the first 24 bits
-    out pins, 8     side 1        ; write control word to the data pins
-    nop             side 0 [10]   ; pull WR
-    irq wait 7      side 1 [10]   ; let it select the next display
+    jmp y--, display_char side 1             ; if Y is not 0 yet, then onto the next character
+                                             ; else, increment X to select the next display
+    mov y, !x             side 1             
+    jmp y--, inc_x_cont   side 1
+inc_x_cont:
+    mov x, !y             side 1
+
+    set y, 6              side 1             ; check if X reached number of displays(6)
+    jmp x != y, next_disp side 1             ; if yes, then start over with the ffirst display
 .wrap
 
 
@@ -75,15 +69,11 @@ start:
 #define HDSP2112_PIO_DISPLAY_CHAR_SM       0
 #define HDSP2112_PIO_SELECT_CHAR_SM        1
 #define HDSP2112_PIO_SELECT_DISPLAY_SM     2
-#define HDSP2112_PIO_WRITE_CTRL_WORD_SM    3
 
 
 #define HDSP2112_PIO_DISP_SM_MASK ((1 << HDSP2112_PIO_DISPLAY_CHAR_SM) | \
                                    (1 << HDSP2112_PIO_SELECT_CHAR_SM) | \
                                    (1 << HDSP2112_PIO_SELECT_DISPLAY_SM))
-
-#define HDSP2112_PIO_CTRL_SM_MASK ((1 << HDSP2112_PIO_SELECT_DISPLAY_SM) | \
-                                   (1 << HDSP2112_PIO_WRITE_CTRL_WORD_SM))
 
 static inline void hdsp2112_program_init(PIO pio)
 {
@@ -110,16 +100,14 @@ static inline void hdsp2112_program_init(PIO pio)
     pio_sm_set_consecutive_pindirs(pio, HDSP2112_PIO_DISPLAY_CHAR_SM,
                                    HDSP_DATA_START_PIN, HDSP_DATA_PINS_NUM,
                                    true);
-    pio_sm_set_consecutive_pindirs(pio, HDSP2112_PIO_DISPLAY_CHAR_SM,
-                                   HDSP_WR_PIN, 1, true);
-
     pio_sm_set_consecutive_pindirs(pio, HDSP2112_PIO_SELECT_CHAR_SM,
                                    HDSP_ADDR_START_PIN, HDSP_ADDR_PINS_NUM,
                                    true);
-
     pio_sm_set_consecutive_pindirs(pio, HDSP2112_PIO_SELECT_DISPLAY_SM,
                                    HDSP_CE_START_PIN, HDSP_CE_PINS_NUM,
                                    true);
+    pio_sm_set_consecutive_pindirs(pio, HDSP2112_PIO_SELECT_DISPLAY_SM,
+                                   HDSP_WR_PIN, 1, true);
 
     pio_sm_config c;
     
@@ -127,7 +115,6 @@ static inline void hdsp2112_program_init(PIO pio)
     c = display_char_program_get_default_config(offs0);
     sm_config_set_out_shift(&c, false, true, 8);
     sm_config_set_out_pins(&c, HDSP_DATA_START_PIN, HDSP_DATA_PINS_NUM);
-    sm_config_set_sideset_pins(&c, HDSP_WR_PIN);
     sm_config_set_clkdiv(&c, 4.0);
     pio_sm_init(pio, HDSP2112_PIO_DISPLAY_CHAR_SM, offs0, &c);
 
@@ -138,20 +125,14 @@ static inline void hdsp2112_program_init(PIO pio)
     sm_config_set_clkdiv(&c, 4.0);
     pio_sm_init(pio, HDSP2112_PIO_SELECT_CHAR_SM, offs1, &c);
 
-    uint offs2 = pio_add_program(pio, &select_display_program);
-    c = select_display_program_get_default_config(offs2);
+    uint offs2 = pio_add_program(pio, &select_display_and_write_chars_program);
+    c = select_display_and_write_chars_program_get_default_config(offs2);
     sm_config_set_out_shift(&c, false, true, 32);
     sm_config_set_out_pins(&c, HDSP_CE_START_PIN, HDSP_CE_PINS_NUM);
-    sm_config_set_clkdiv(&c, 4.0);
-    pio_sm_init(pio, HDSP2112_PIO_SELECT_DISPLAY_SM, offs2, &c);
-
-    uint offs3 = pio_add_program(pio, &write_ctrl_word_program);
-    c = write_ctrl_word_program_get_default_config(offs3);
-    sm_config_set_out_shift(&c, false, true, 32);
-    sm_config_set_out_pins(&c, HDSP_DATA_START_PIN, HDSP_DATA_PINS_NUM);
+    sm_config_set_set_pins(&c, HDSP_CE_START_PIN, HDSP_CE_PINS_NUM);
     sm_config_set_sideset_pins(&c, HDSP_WR_PIN);
     sm_config_set_clkdiv(&c, 4.0);
-    pio_sm_init(pio, HDSP2112_PIO_WRITE_CTRL_WORD_SM, offs3, &c);
+    pio_sm_init(pio, HDSP2112_PIO_SELECT_DISPLAY_SM, offs2, &c);
 
     pio_set_sm_mask_enabled(pio, HDSP2112_PIO_DISP_SM_MASK, true);
 }

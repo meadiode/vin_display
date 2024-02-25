@@ -74,6 +74,8 @@ void hdsp2112_init(void)
     sleep_us(100u);
     gpio_put(HDSP_RST_PIN, 1);
 
+    // hdsp2112_bitbang_test();
+
     hdsp2112_program_init(HDSP_PIO);
 
     hdsp_dma_chan = dma_claim_unused_channel(true);
@@ -93,7 +95,7 @@ void hdsp2112_init(void)
 
     hdsp2112_print("111111112222222233333333444444445555555566666666");
 
-    for (uint8_t i = 0; i < 2; i++)
+    for (uint8_t i = 0; i < 3; i++)
     {
         hdsp2112_set_brightness(255);
         sleep_ms(300);
@@ -101,9 +103,6 @@ void hdsp2112_init(void)
         sleep_ms(300);
     }
 
-    // sleep_ms(500);
-    // hdsp2112_print("***<1>*****<2>*****<3>*****<4>*****<5>*****<6>**");
-    // sleep_ms(500);
     hdsp2112_print("");
 }
 
@@ -117,6 +116,10 @@ void hdsp2112_print(const uint8_t *str)
 void hdsp2112_print_buf(const uint8_t *buf, size_t buflen)
 {
     dma_channel_wait_for_finish_blocking(hdsp_dma_chan);
+    sleep_us(10);
+    
+    gpio_put(HDSP_CADDR_START_PIN + 0, 1);
+    gpio_put(HDSP_CADDR_START_PIN + 1, 1);
 
     memset(display_buf, ' ', sizeof(display_buf));
     memcpy(display_buf, buf, MIN(buflen, sizeof(display_buf)));
@@ -127,30 +130,19 @@ void hdsp2112_print_buf(const uint8_t *buf, size_t buflen)
 
 void hdsp2112_set_brightness(uint8_t brightness)
 {
-    dma_channel_wait_for_finish_blocking(hdsp_dma_chan);
+    static uint8_t ctrl_buf[8 * HDSP_NUM_DISPLAYS] = {0};
+    uint8_t cw = (0xff - brightness) / 32;
 
-    sleep_us(10u);
-    
-    pio_set_sm_mask_enabled(HDSP_PIO, HDSP2112_PIO_DISP_SM_MASK, false);
-    pio_set_sm_mask_enabled(HDSP_PIO, HDSP2112_PIO_CTRL_SM_MASK, true);
+    dma_channel_wait_for_finish_blocking(hdsp_dma_chan);
+    sleep_us(10);
 
     gpio_put(HDSP_CADDR_START_PIN + 0, 0);
     gpio_put(HDSP_CADDR_START_PIN + 1, 1);
 
-    uint8_t cw = (0xff - brightness) / 32;
+    memset(ctrl_buf, cw, sizeof(ctrl_buf));
+    dma_channel_set_read_addr(hdsp_dma_chan, ctrl_buf, true);
 
-    for (uint8_t i = 0; i < HDSP_NUM_DISPLAYS; i++)
-    {
-        pio_sm_put_blocking(pio0, HDSP2112_PIO_WRITE_CTRL_WORD_SM, cw);
-    }
-
-    sleep_us(100u);
-
-    pio_set_sm_mask_enabled(HDSP_PIO, HDSP2112_PIO_CTRL_SM_MASK, false);
-    pio_set_sm_mask_enabled(HDSP_PIO, HDSP2112_PIO_DISP_SM_MASK, true);
-
-    gpio_put(HDSP_CADDR_START_PIN + 0, 1);
-    gpio_put(HDSP_CADDR_START_PIN + 1, 1);
+    dma_channel_wait_for_finish_blocking(hdsp_dma_chan);
 }
 
 void hdsp2112_bitbang_test(void)
@@ -164,16 +156,6 @@ void hdsp2112_bitbang_test(void)
             uint8_t disp_id = i / 8;
             uint8_t char_id = i % 8;
 
-            gpio_put(HDSP_CE_START_PIN + 0, (disp_id >> 0) & 0x01);
-            gpio_put(HDSP_CE_START_PIN + 1, (disp_id >> 1) & 0x01);
-            gpio_put(HDSP_CE_START_PIN + 2, (disp_id >> 2) & 0x01);
-
-            gpio_put(HDSP_ADDR_START_PIN + 0, (char_id >> 0) & 0x01);
-            gpio_put(HDSP_ADDR_START_PIN + 1, (char_id >> 1) & 0x01);
-            gpio_put(HDSP_ADDR_START_PIN + 2, (char_id >> 2) & 0x01);
-            gpio_put(HDSP_CADDR_START_PIN + 0, 1);
-            gpio_put(HDSP_CADDR_START_PIN + 1, 1);
-
             uint8_t c = text[i];
 
             gpio_put(HDSP_DATA_START_PIN + 0, (c >> 0) & 0x01);
@@ -185,13 +167,28 @@ void hdsp2112_bitbang_test(void)
             gpio_put(HDSP_DATA_START_PIN + 6, (c >> 6) & 0x01);
             gpio_put(HDSP_DATA_START_PIN + 7, 0);
 
+            gpio_put(HDSP_ADDR_START_PIN + 0, (char_id >> 0) & 0x01);
+            gpio_put(HDSP_ADDR_START_PIN + 1, (char_id >> 1) & 0x01);
+            gpio_put(HDSP_ADDR_START_PIN + 2, (char_id >> 2) & 0x01);
+            gpio_put(HDSP_CADDR_START_PIN + 0, 1);
+            gpio_put(HDSP_CADDR_START_PIN + 1, 1);
+
+            gpio_put(HDSP_CE_START_PIN + 0, (disp_id >> 0) & 0x01);
+            gpio_put(HDSP_CE_START_PIN + 1, (disp_id >> 1) & 0x01);
+            gpio_put(HDSP_CE_START_PIN + 2, (disp_id >> 2) & 0x01);
+            sleep_ms(1u);
+
             gpio_put(HDSP_WR_PIN, 0);
             sleep_ms(1u);
             gpio_put(HDSP_WR_PIN, 1);
             sleep_ms(1u);
+
+            gpio_put(HDSP_CE_START_PIN + 0, 1);
+            gpio_put(HDSP_CE_START_PIN + 1, 1);
+            gpio_put(HDSP_CE_START_PIN + 2, 1);
         }
 
-        sleep_ms(20u);
+        sleep_ms(3000u);
 
         uint8_t lastc = text[47];
         memmove(text + 1, text, 47);
