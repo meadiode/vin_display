@@ -1,10 +1,25 @@
 import pcbnew
 
+
+'''
+Resize font size for all resistor and capacitor designators
+
+To execute:
+    In KiCad: Menu -> Tools -> Scripting Console ...
+    Type in:
+        >>> exec(open('./resize_designators.py', 'r').read())
+'''
+
+
+FONT_SIZE = 0.7
+FOOTPRINTS = ('R', 'C')
+
+
 # Load the current board
 board = pcbnew.GetBoard()
 
 # Set the desired font size
-new_size = pcbnew.FromMM(0.7)
+new_size = pcbnew.FromMM(FONT_SIZE)
 
 # Create a VECTOR2I object for the new font size
 new_size_vector = pcbnew.VECTOR2I(new_size, new_size)
@@ -14,7 +29,7 @@ for module in board.GetFootprints():
     reference = module.GetReference()
 
     # Check if the footprint is a capacitor or resistor
-    if reference.startswith("C") or reference.startswith("R"):
+    if reference.startswith(FOOTPRINTS):
 
         # Get the reference text object
         ref_text = module.Reference()
