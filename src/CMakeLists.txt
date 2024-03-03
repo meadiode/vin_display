@@ -31,6 +31,7 @@ set(VIN_DSIP_SOURCES
         mjson.c
         usb_descriptors.c
         usb_serial.c
+        if_uart.c
         buzzer.c
         knob.c
 )

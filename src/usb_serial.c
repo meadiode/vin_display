@@ -41,6 +41,8 @@ void usb_serial_init(void)
 
     tusb_init();
 
+    tx_buf = xStreamBufferCreate(TXRX_BUF_SIZE, 1);
+    rx_buf = xStreamBufferCreate(TXRX_BUF_SIZE, 1);
 
     xTaskCreate(usb_serial_task,
                 "usb_serial",
@@ -79,13 +81,8 @@ static void dispatch_messages(void)
 
 static void usb_serial_task(void *params)
 {
-
-    tx_buf = xStreamBufferCreate(TXRX_BUF_SIZE, 1);
-    rx_buf = xStreamBufferCreate(TXRX_BUF_SIZE, 1);
-
     for (;;)
     {
-
         tud_task();
         dispatch_messages();
 

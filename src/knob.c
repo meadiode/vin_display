@@ -62,8 +62,8 @@ void knob_init(void)
     gpio_init(KNOB_ENC_A_PIN);
     gpio_init(KNOB_ENC_B_PIN);
 
-    gpio_set_dir(KNOB_ENC_A_PIN, false);
-    gpio_set_dir(KNOB_ENC_B_PIN, false);
+    gpio_pull_up(KNOB_ENC_A_PIN);
+    gpio_pull_up(KNOB_ENC_B_PIN);
 
     pio_set_irq0_source_enabled(KNOB_PIO, pis_interrupt0, true);
     irq_set_exclusive_handler(KNOB_PIO_SYS_IRQ, knob_irq0_handler);

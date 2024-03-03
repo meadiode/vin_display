@@ -6,13 +6,13 @@
 
 #include "command.h"
 #include "usb_serial.h"
+#include "if_uart.h"
 #include "display.h"
 #include "knob.h"
 #include "buttons.h"
 #include "buzzer.h"
 
-#define COMMAND_TASK_PRIORITY  5
-
+#define COMMAND_TASK_PRIORITY  7
 
 #define CMD_OK     0
 #define CMD_ERROR -1
@@ -30,8 +30,38 @@
 #define MESSAGE_TRAILER_SIZE 3
 #define MESSAGE_SYNC         0x7e
 
+#define COMM_CHANNEL_BUF_SIZE 128
+#define COMM_NUM_CHANNELS    2
+
 
 static TaskHandle_t command_task_handle = NULL;
+
+
+typedef struct
+{
+    uint32_t (*rx_fun) (uint8_t*, uint32_t);
+    void (*tx_fun) (const uint8_t*, uint32_t);
+    uint32_t buf_cur_size;
+    uint8_t buf[COMM_CHANNEL_BUF_SIZE];
+
+} comm_channel_t; 
+
+
+static comm_channel_t comm_channels[2] = 
+    {
+        {
+            .rx_fun = usb_serial_rx,
+            .tx_fun = usb_serial_tx,
+            .buf_cur_size = 0,
+            .buf = {0},
+        },
+        {
+            .rx_fun = if_uart_rx,
+            .tx_fun = if_uart_tx,
+            .buf_cur_size = 0,
+            .buf = {0},
+        },
+    };
 
 
 uint16_t crc16_ccitt(const uint8_t *buf, uint16_t len)
@@ -124,27 +154,28 @@ static int16_t dispatch_packet(const uint8_t *buf, uint32_t size)
 }
 
 
-static void dispatch_incoming_data(void)
+static void dispatch_incoming_data(comm_channel_t *chan)
 {
-    static uint8_t buf[128];
-    uint32_t cur_size = 0, head, size;
+    uint8_t *buf = chan->buf;
+    uint32_t *cur_size = &chan->buf_cur_size;
+    uint32_t head, size;
 
-    size = usb_serial_rx(buf + cur_size, sizeof(buf) - cur_size);
+    size = chan->rx_fun(buf + *cur_size, COMM_CHANNEL_BUF_SIZE - *cur_size);
 
     if (size)
     {
-        cur_size += size;
+        *cur_size += size;
 
-        for (head = 0; head < cur_size; head++)
+        for (head = 0; head < *cur_size; head++)
         {
-            int16_t res = dispatch_packet(buf + head, cur_size - head);
+            int16_t res = dispatch_packet(buf + head, *cur_size - head);
             
             if (res == PACKET_NEED_BYTES)
             {
                 if (head)
                 {
-                    cur_size -= head;
-                    memmove(buf, buf + head, cur_size);
+                    *cur_size -= head;
+                    memmove(buf, buf + head, *cur_size);
                     head = 0;
                 }
                 break;
@@ -152,22 +183,22 @@ static void dispatch_incoming_data(void)
             else if (res >= MESSAGE_MIN)
             {
                 head += res;
-                if (head < cur_size)
+                if (head < *cur_size)
                 {
                     head--;
                 }
                 else
                 {
-                    cur_size = 0;
+                    *cur_size = 0;
                     head = 0;
                     break;
                 }
-            };
+            }
         }
 
         if (head)
         {
-            cur_size -= head;
+            *cur_size -= head;
         }            
     }
 }
@@ -221,6 +252,14 @@ static uint32_t pack_buzzer_event(uint8_t buzzer_event, uint8_t *buf)
     return buf[0];
 }
 
+static void tx_data(const uint8_t *buf, uint32_t buflen)
+{
+    for (uint8_t cn_id = 0; cn_id < COMM_NUM_CHANNELS; cn_id++)
+    {
+        comm_channels[cn_id].tx_fun(buf, buflen);
+    }
+}
+
 
 static void process_outgoing_data(void)
 {
@@ -235,21 +274,21 @@ static void process_outgoing_data(void)
     {
         printf("Knob position: %d\n", knob_pos);
         size = pack_knob_event(knob_pos, buf);
-        usb_serial_tx(buf, size);
+        tx_data(buf, size);
     }
 
     while (buttons_get_update(&btn_state))
     {
         printf("Button state: %u\n", btn_state);
         size = pack_button_event(btn_state, buf);
-        usb_serial_tx(buf, size);
+        tx_data(buf, size);
     }
 
     while (buzzer_get_update(&buzzer_event))
     {
         printf("Buzzer event: %d\n", buzzer_event);
         size = pack_buzzer_event(buzzer_event, buf);
-        usb_serial_tx(buf, size);
+        tx_data(buf, size);
     }
 }
 
@@ -258,11 +297,12 @@ static void command_task(void *params)
 {
     for (;;)
     {
-        vTaskDelay(10);
-
-        dispatch_incoming_data();
-
+        for (uint8_t cn_id = 0; cn_id < COMM_NUM_CHANNELS; cn_id++)
+        {
+            dispatch_incoming_data(&comm_channels[cn_id]);
+        }
         process_outgoing_data();
+        vTaskDelay(10);
     }
 }
 

@@ -12,10 +12,11 @@
 #include "knob.h"
 #include "buttons.h"
 #include "usb_serial.h"
+#include "if_uart.h"
 #include "command.h"
 
 #define SW_MAJOR_VERSION 0
-#define SW_MINOR_VERSION 492
+#define SW_MINOR_VERSION 496
 
 #define MAIN_TASK_PRIORITY  1
 
@@ -85,6 +86,8 @@ int main( void )
     display_init();
 
     usb_serial_init();
+
+    if_uart_init();
 
     printf("Starting FreeRTOS SMP on both cores\n");
     
