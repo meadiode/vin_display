@@ -41,15 +41,11 @@ cw_or_ccw:                   ; check which direction the encoder moved.
 ccw_irq:                     ; if it moved counter clock-wise,
     irq nowait 4             ; set an interrpupt as a flag to signalize the 
                              ; ccw direction in the main program.
-    irq nowait 0             ; set the interrupt 0, which has a handler 
-                             ; in the main code.
-    jmp start
-
-cw_irq:                      ; if it moved clock-wise,
-    irq nowait 0             ; set just the interrupt 0, the main code hanler
+cw_irq:
+    irq nowait 0             ; if it moved clock-wise,
+                             ; set just the interrupt 0, the main code handler
                              ; will imply cw-direction without the 
                              ; other interrupt flag.
-
 .wrap
 
 % c-sdk {

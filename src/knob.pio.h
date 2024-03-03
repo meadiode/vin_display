@@ -13,7 +13,7 @@
 // ------- //
 
 #define encoder_wrap_target 0
-#define encoder_wrap 19
+#define encoder_wrap 17
 
 static const uint16_t encoder_program_instructions[] = {
             //     .wrap_target
@@ -32,18 +32,16 @@ static const uint16_t encoder_program_instructions[] = {
     0x00a0, // 12: jmp    x != y, 0                  
     0x0008, // 13: jmp    8                          
     0xe021, // 14: set    x, 1                       
-    0x00b3, // 15: jmp    x != y, 19                 
+    0x00b1, // 15: jmp    x != y, 17                 
     0xc004, // 16: irq    nowait 4                   
     0xc000, // 17: irq    nowait 0                   
-    0x0000, // 18: jmp    0                          
-    0xc000, // 19: irq    nowait 0                   
             //     .wrap
 };
 
 #if !PICO_NO_HARDWARE
 static const struct pio_program encoder_program = {
     .instructions = encoder_program_instructions,
-    .length = 20,
+    .length = 18,
     .origin = -1,
 };
 
