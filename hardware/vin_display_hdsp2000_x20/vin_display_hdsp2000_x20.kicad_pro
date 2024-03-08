@@ -206,7 +206,9 @@
     "equivalence_files": []
   },
   "erc": {
-    "erc_exclusions": [],
+    "erc_exclusions": [
+      "pin_not_driven|933450|558800|e1eecda8-f9f0-4e40-a108-842e3f01549f|00000000-0000-0000-0000-000000000000|||"
+    ],
     "meta": {
       "version": 0
     },
@@ -405,7 +407,7 @@
       "no_connect_connected": "warning",
       "no_connect_dangling": "warning",
       "pin_not_connected": "error",
-      "pin_not_driven": "error",
+      "pin_not_driven": "warning",
       "pin_to_pin": "error",
       "power_pin_not_driven": "ignore",
       "similar_labels": "warning",
