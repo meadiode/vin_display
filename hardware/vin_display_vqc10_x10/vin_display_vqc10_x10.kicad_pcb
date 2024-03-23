@@ -706,7 +706,7 @@
     (property "ki_keywords" "R res resistor")
     (path "/9f5390c3-22e6-4bc8-9d3c-b8a6fdc646be/4e3a6206-bb98-41e0-9c36-8ddfed079e92")
     (attr smd)
-    (fp_text reference "R17" (at -3.3528 13.1064 90) (layer "F.SilkS")
+    (fp_text reference "R17" (at -3.3528 13.1064 90) (layer "F.SilkS") hide
         (effects (font (size 0.7 0.7) (thickness 0.15)))
       (tstamp a97b5518-0fdd-423c-a7b5-aa0d206d701e)
     )
@@ -1170,7 +1170,7 @@
     (property "ki_keywords" "R res resistor")
     (path "/9f5390c3-22e6-4bc8-9d3c-b8a6fdc646be/53efc12b-5cb8-452d-9635-bc8737bdc29d")
     (attr smd)
-    (fp_text reference "R19" (at -3.4544 7.5692 90) (layer "F.SilkS")
+    (fp_text reference "R19" (at -3.4544 7.5692 90) (layer "F.SilkS") hide
         (effects (font (size 0.7 0.7) (thickness 0.15)))
       (tstamp 50ed5729-911e-47de-a987-5c6c73ee02ac)
     )
@@ -2815,7 +2815,7 @@
     (property "ki_keywords" "R res resistor")
     (path "/9f5390c3-22e6-4bc8-9d3c-b8a6fdc646be/7f3953b8-299f-40d6-a620-0256a6e412d7")
     (attr smd)
-    (fp_text reference "R18" (at -3.3528 8.128 90) (layer "F.SilkS")
+    (fp_text reference "R18" (at -3.3528 8.128 90) (layer "F.SilkS") hide
         (effects (font (size 0.7 0.7) (thickness 0.15)))
       (tstamp 1dae362d-35d2-4b7f-8649-a6131a70f4e0)
     )
@@ -3008,7 +3008,7 @@
     (property "ki_keywords" "R res resistor")
     (path "/9f5390c3-22e6-4bc8-9d3c-b8a6fdc646be/87270565-8fc1-4ee2-a3ad-81e27cd6f967")
     (attr smd)
-    (fp_text reference "R16" (at -3.302 7.4676 90) (layer "F.SilkS")
+    (fp_text reference "R16" (at -3.302 7.4676 90) (layer "F.SilkS") hide
         (effects (font (size 0.7 0.7) (thickness 0.15)))
       (tstamp 7f1a8b35-bad2-4fc4-9fe9-01c86b695cc6)
     )
@@ -3364,7 +3364,7 @@
     (property "ki_keywords" "R res resistor")
     (path "/9f5390c3-22e6-4bc8-9d3c-b8a6fdc646be/24422d7b-9fff-46bc-830c-03eeaab21906")
     (attr smd)
-    (fp_text reference "R20" (at -3.4036 14.4272 90) (layer "F.SilkS")
+    (fp_text reference "R20" (at -3.4036 14.4272 90) (layer "F.SilkS") hide
         (effects (font (size 0.7 0.7) (thickness 0.15)))
       (tstamp 15d1a87c-47f0-481d-97f1-fc74241f5d58)
     )
@@ -4307,7 +4307,7 @@
     (property "ki_keywords" "R res resistor")
     (path "/9f5390c3-22e6-4bc8-9d3c-b8a6fdc646be/522d7b67-f43a-4f50-a92b-28535fbe835e")
     (attr smd)
-    (fp_text reference "R15" (at -3.2512 8.0264 90) (layer "F.SilkS")
+    (fp_text reference "R15" (at -3.2512 8.0264 90) (layer "F.SilkS") hide
         (effects (font (size 0.7 0.7) (thickness 0.15)))
       (tstamp 273374f7-09e7-48c8-8fad-129d53ef7c37)
     )
@@ -4854,7 +4854,7 @@
     (property "ki_keywords" "R res resistor")
     (path "/9f5390c3-22e6-4bc8-9d3c-b8a6fdc646be/cc97b369-a482-4946-bb8b-35277dd68fce")
     (attr smd)
-    (fp_text reference "R21" (at -3.2512 15.494 90) (layer "F.SilkS")
+    (fp_text reference "R21" (at -3.2512 15.494 90) (layer "F.SilkS") hide
         (effects (font (size 0.7 0.7) (thickness 0.15)))
       (tstamp 7b4b28d0-9a4a-4ab0-921c-d486c1c773d5)
     )
@@ -5920,7 +5920,7 @@
   (gr_text "CoolHorse Industries 2024" (at 268.5288 72.5424) (layer "B.SilkS") (tstamp 1ee79a8a-fc4e-40cc-8c09-5faae95bc7f3)
     (effects (font (size 1.5 1.5) (thickness 0.3) bold) (justify left bottom mirror))
   )
-  (gr_text "VinDisplay hdsp2000_x20 v1.0" (at 270.2288 69.3424) (layer "B.SilkS") (tstamp 8d200a57-90f5-403a-b080-da52fec265b8)
+  (gr_text "VinDisplay vqc10_x10 v1.0" (at 270.2288 69.3424) (layer "B.SilkS") (tstamp 8d200a57-90f5-403a-b080-da52fec265b8)
     (effects (font (size 1.5 1.5) (thickness 0.3) bold) (justify left bottom mirror))
   )
   (gr_text "BOOTSEL" (at 255.6256 90.8812) (layer "F.SilkS") (tstamp 158dd2d7-f3f3-41ef-834f-7670816c53ad)

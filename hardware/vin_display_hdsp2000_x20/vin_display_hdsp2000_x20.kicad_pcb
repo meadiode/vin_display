@@ -643,7 +643,7 @@
         (effects (font (size 1 1) (thickness 0.1)))
       (tstamp f6673571-aefc-4e71-9863-3502e9257ad6)
     )
-    (fp_text value "DMP2022LSS" (at 2.54 2.54 -90 unlocked) (layer "F.Fab") hide
+    (fp_text value "SQ4435EY" (at 2.54 2.54 -90 unlocked) (layer "F.Fab") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp e44a97d2-67bb-4130-a984-b146dd094c53)
     )
@@ -1129,7 +1129,7 @@
         (effects (font (size 1 1) (thickness 0.1)))
       (tstamp 107bd499-2588-4fea-930f-161ae954a7fc)
     )
-    (fp_text value "DMP2022LSS" (at 2.54 2.54 -90 unlocked) (layer "F.Fab") hide
+    (fp_text value "SQ4435EY" (at 2.54 2.54 -90 unlocked) (layer "F.Fab") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp b6561f07-13a2-4533-98c8-da2853423d53)
     )
@@ -2640,7 +2640,7 @@
         (effects (font (size 1 1) (thickness 0.1)))
       (tstamp 3cade3de-ea9a-4404-80c2-b0f9b5cc3574)
     )
-    (fp_text value "DMP2022LSS" (at 2.54 2.54 -90 unlocked) (layer "F.Fab") hide
+    (fp_text value "SQ4435EY" (at 2.54 2.54 -90 unlocked) (layer "F.Fab") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 0eee3a1e-9ccf-4e66-b8b1-b050d64a3f1f)
     )
@@ -2785,7 +2785,7 @@
         (effects (font (size 1 1) (thickness 0.1)))
       (tstamp 94324e99-2ae0-437a-9653-d05a2c897de6)
     )
-    (fp_text value "DMP2022LSS" (at 2.54 2.54 -90 unlocked) (layer "F.Fab") hide
+    (fp_text value "SQ4435EY" (at 2.54 2.54 -90 unlocked) (layer "F.Fab") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 3767a5de-4ffe-485e-a106-7f632b2b3c77)
     )
@@ -4204,7 +4204,7 @@
         (effects (font (size 1 1) (thickness 0.1)))
       (tstamp 2559d3f3-2e4f-4ef6-8476-f19a78fe3fd8)
     )
-    (fp_text value "DMP2022LSS" (at 2.54 2.54 -90 unlocked) (layer "F.Fab") hide
+    (fp_text value "SQ4435EY" (at 2.54 2.54 -90 unlocked) (layer "F.Fab") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp d6654e63-7b74-41ae-94f7-07b925896b00)
     )
