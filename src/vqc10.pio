@@ -1,0 +1,103 @@
+
+.program push_display_data
+.wrap_target
+    out pins, 8
+    irq wait 4
+    irq wait 4
+.wrap
+
+
+.program drive_display
+.wrap_target
+    
+    out x, 32           ; Load total number of characters
+
+load_data:
+    wait 1 irq 4        ; Wait for the push_data program to set data pins
+    out pins, 16  [5]   ; Set character address and dmux enable pins
+    out pins, 16        ; Clear character address and dmux enable pins,
+                        ;  this will load data for the current row for the
+                        ;  current character
+    wait 1 irq 4        ; Let the push_data program to continue
+    jmp x--, load_data  ; Onto the next character
+
+                        ; When row data for each character is loaded,
+                        ;  light the current row
+    out x, 16           ; Load into X number of cycles to keep row LEDs on
+    out y, 16           ; Load into Y number of cycles to keep row LEDs off
+    out pins, 16        ; Light the current row
+
+row_on:
+    jmp x--, row_on     ; Keep the row lit for the specified amount of cycles
+
+    out pins, 16        ; Turn the current row off
+
+row_off:
+    jmp y--, row_off    ; Keep the row off for the specified amount of cycles
+                        ;  to modulate brightness
+
+
+.wrap
+
+% c-sdk {
+
+
+#define VQC10_PIO_PUSH_DATA_SM   0
+#define VQC10_PIO_CTRL_SEQ_SM    1
+
+#define VQC10_PIO_SM_MASK ((1 << VQC10_PIO_PUSH_DATA_SM) | \
+                           (1 << VQC10_PIO_CTRL_SEQ_SM))
+
+
+static inline void vqc10_program_init(PIO pio)
+{
+
+    uint8_t i;
+
+    for (i = 0; i < VQC_DATA_NUM_PINS; i++)
+    {
+        pio_gpio_init(pio, VQC_DATA_START_PIN + i);
+    }
+
+    for (i = 0; i < VQC_CTRL_NUM_PINS; i++)
+    {
+        switch (VQC_CTRL_START_PIN + i)
+        {
+        case VQC_CTRL_NC1_PIN:
+        case VQC_CTRL_NC2_PIN:
+            break;
+
+        default:
+            pio_gpio_init(pio, VQC_CTRL_START_PIN + i);   
+            break;
+        }
+    }
+
+
+    pio_sm_set_consecutive_pindirs(pio, VQC10_PIO_PUSH_DATA_SM,
+                                   VQC_DATA_START_PIN, VQC_DATA_NUM_PINS, true);
+
+    pio_sm_set_consecutive_pindirs(pio, VQC10_PIO_CTRL_SEQ_SM,
+                                   VQC_CTRL_START_PIN, VQC_CTRL_NUM_PINS, true);
+
+    pio_sm_config c;
+
+    uint offs0 = pio_add_program(pio, &push_display_data_program);
+    c = push_display_data_program_get_default_config(offs0);
+    sm_config_set_out_shift(&c, true, true, 32);
+    sm_config_set_out_pins(&c, VQC_DATA_START_PIN, VQC_DATA_NUM_PINS);
+    sm_config_set_clkdiv(&c, 25.0);
+    pio_sm_init(pio, VQC10_PIO_PUSH_DATA_SM, offs0, &c);
+
+    uint offs1 = pio_add_program(pio, &drive_display_program);
+    c = drive_display_program_get_default_config(offs1);
+    sm_config_set_out_shift(&c, true, true, 32);
+    sm_config_set_out_pins(&c, VQC_CTRL_START_PIN, VQC_CTRL_NUM_PINS);
+    sm_config_set_clkdiv(&c, 25.0);
+    pio_sm_init(pio, VQC10_PIO_CTRL_SEQ_SM, offs1, &c);
+
+    pio_set_sm_mask_enabled(pio, VQC10_PIO_SM_MASK, true);
+}
+
+
+%}

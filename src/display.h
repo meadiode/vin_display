@@ -22,6 +22,13 @@
 # define display_print_buf hdsp2112_print_buf
 # define display_set_brightness hdsp2112_set_brightness
 
+#elif (VIN_DISP_BOARD == BOARD_VQC10_X10)
+
+# include "vqc10.h"
+# define display_driver_init vqc10_init
+# define display_print_buf vqc10_print_buf
+# define display_set_brightness vqc10_set_brightness
+
 #endif
 
 

@@ -21,6 +21,7 @@ endif()
 add_definitions(
         -DBOARD_MDL2416C_X10=1
         -DBOARD_HDSP2112_X6=2
+        -DBOARD_VQC10_X10=3
 )
 
 set(VIN_DSIP_SOURCES
@@ -78,3 +79,18 @@ target_compile_definitions(hdsp2112_x6 PRIVATE VIN_DISP_BOARD=BOARD_HDSP2112_X6)
 
 target_link_libraries(hdsp2112_x6 ${VIN_DSIP_LIBS})
 pico_add_extra_outputs(hdsp2112_x6)
+
+
+# VQC10_X10
+
+add_executable(vqc10_x10 vqc10.c ${VIN_DSIP_SOURCES})
+
+pico_generate_pio_header(vqc10_x10 ${CMAKE_CURRENT_LIST_DIR}/vqc10.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR})
+pico_generate_pio_header(vqc10_x10 ${CMAKE_CURRENT_LIST_DIR}/buzzer.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR})
+pico_generate_pio_header(vqc10_x10 ${CMAKE_CURRENT_LIST_DIR}/knob.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR})
+
+target_include_directories(vqc10_x10 PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+target_compile_definitions(vqc10_x10 PRIVATE VIN_DISP_BOARD=BOARD_VQC10_X10)
+
+target_link_libraries(vqc10_x10 ${VIN_DSIP_LIBS})
+pico_add_extra_outputs(vqc10_x10)

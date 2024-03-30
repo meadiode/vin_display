@@ -21,6 +21,11 @@
 # define KNOB_ENC_A_PIN 26
 # define KNOB_ENC_B_PIN 27
 
+#elif (VIN_DISP_BOARD == BOARD_VQC10_X10)
+
+# define KNOB_ENC_A_PIN 26
+# define KNOB_ENC_B_PIN 27
+
 #endif
 
 #define KNOB_PIO           pio1
