@@ -38,7 +38,7 @@ duty_loop_l:
 
 #define BUZZER_PIO_SM 3
 
-static inline void mdl2416c_program_init(PIO pio, uint buzzer_pin)
+static inline void buzzer_program_init(PIO pio, uint buzzer_pin)
 {
     pio_gpio_init(pio, buzzer_pin);
 

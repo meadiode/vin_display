@@ -46,7 +46,7 @@ static inline pio_sm_config buzzer_program_get_default_config(uint offset) {
 
 #include "hardware/clocks.h"
 #define BUZZER_PIO_SM 3
-static inline void mdl2416c_program_init(PIO pio, uint buzzer_pin)
+static inline void buzzer_program_init(PIO pio, uint buzzer_pin)
 {
     pio_gpio_init(pio, buzzer_pin);
     pio_sm_set_consecutive_pindirs(pio, BUZZER_PIO_SM, buzzer_pin, 1, true);

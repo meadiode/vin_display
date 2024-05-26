@@ -287,13 +287,13 @@ void vqc10_init(void)
 }
 
 
-void vqc10_print_buf(const uint8_t *buf, size_t buflen)
+void vqc10_print_buf(const uint8_t *buf, size_t buf_len)
 {
     memset(display_buf, 0, DISPLAY_BUF_SIZE);
 
     for (uint8_t i = 0; i < NROWS; i++)
     {
-        for (uint32_t j = 0; j < buflen; j++)
+        for (uint32_t j = 0; j < buf_len; j++)
         {
             const uint8_t *ch_data = &font5x7[NROWS * buf[j]];
             display_buf[i * NCHARS + j] = ch_data[i];

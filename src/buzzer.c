@@ -47,7 +47,7 @@ static void buzzer_dma_handler(void)
 }
 
 
-static void buzzer_queue_sound(float freq, float duration)
+static void queue_sound(float freq, float duration)
 {
     uint32_t ncycles = (uint32_t)(freq * duration);
     uint16_t hperiod = (uint16_t)(1000000.0 / freq) / 2;
@@ -60,7 +60,7 @@ static void buzzer_queue_sound(float freq, float duration)
 }
 
 
-static void buzzer_play(void)
+static void start_dma(void)
 {
     dma_channel_set_trans_count(buzzer_dma_chan,
                                 buffer_pos / sizeof(uint32_t), false);
@@ -80,10 +80,10 @@ static void buzzer_task(void *params)
     size_t data_len;
     uint8_t event = BUZZER_EVENT_BUFFER_NONE;
 
-    buzzer_queue_sound(1000.0, 0.25);
-    buzzer_queue_sound(1200.0, 0.25);
-    buzzer_queue_sound(1400.0, 0.25);
-    buzzer_play();
+    queue_sound(1000.0, 0.25);
+    queue_sound(1200.0, 0.25);
+    queue_sound(1400.0, 0.25);
+    start_dma();
 
     for (;;)
     {
@@ -182,7 +182,7 @@ void buzzer_init(void)
 
     gpio_init(BUZZER_PIN);
 
-    mdl2416c_program_init(pio1, BUZZER_PIN);
+    buzzer_program_init(pio1, BUZZER_PIN);
 
     buzzer_dma_chan = dma_claim_unused_channel(true);
     cfg = dma_channel_get_default_config(buzzer_dma_chan);
@@ -215,4 +215,54 @@ bool buzzer_send(const uint8_t *msg, uint32_t msg_len, uint32_t max_delay)
 bool buzzer_get_update(uint8_t *event)
 {
     return (xMessageBufferReceive(msg_out_buf, event, sizeof(uint8_t), 10) > 0);
+}
+
+
+void buzzer_queue_sound(float freq, float duration)
+{
+    static struct __attribute__ ((packed))
+    {
+        uint8_t  cmd;
+        uint8_t  len;
+        uint32_t ncycles;
+        uint16_t on_period;
+        uint16_t off_period;
+    
+    } quecmd = 
+    {
+        .cmd = COMMAND_BUZZER_QUEUE,
+        .len = 8,
+    };
+
+
+    quecmd.ncycles = (uint32_t)(freq * duration);
+    quecmd.on_period = (uint16_t)(1000000.0 / freq) / 2;
+    quecmd.off_period = quecmd.on_period;
+
+    buzzer_send((const uint8_t*)&quecmd, sizeof(quecmd), 10);
+}
+
+
+void buzzer_play_queue(bool cancel_current_sound)
+{
+    static struct __attribute__ ((packed))
+    {
+        uint8_t cmd;
+        uint8_t cancel;
+    } playcmd =
+    {
+        .cmd = COMMAND_BUZZER_PLAY,
+        .cancel = 0,
+    };
+
+    playcmd.cancel = cancel_current_sound;
+
+    buzzer_send((const uint8_t*)&playcmd, sizeof(playcmd), 10);
+}
+
+
+void buzzer_play_sound(float freq, float duration)
+{
+    buzzer_queue_sound(freq, duration);
+    buzzer_play_queue(true);
 }
